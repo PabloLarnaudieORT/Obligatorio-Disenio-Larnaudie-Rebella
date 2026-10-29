@@ -1,3 +1,5 @@
+package uy.edu.ort.battleshipdemo.Modelo;
+
 public class ConfiguracionBatalla {
     private int filas;
     private int columnas;
@@ -30,13 +32,14 @@ public class ConfiguracionBatalla {
         this.flota = flota;
     }
 
-    //ToDo: ¿Que hacemos aca?
-    public void validar(){
-
+    public void validar() {
+        // filas y columnas entre 6 y 12, inclusive.
+        // flota no nula hayq que validar cada DetalleFlota.
+        // La unicidad del lugar corresponde al futuro SistemaBatallas.
     }
 
-    public void calcularOcupados() {
-
+    public int calcularOcupados() {
+        // sumar calcularCeldas() de cada detalle, aplicando Experto.
     }
     
 }

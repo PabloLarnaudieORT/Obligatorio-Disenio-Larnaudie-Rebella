@@ -1,3 +1,5 @@
+package uy.edu.ort.battleshipdemo.Modelo.Jugador;
+
 public class JugadorHumano extends Jugador {
     private String nombre;
 

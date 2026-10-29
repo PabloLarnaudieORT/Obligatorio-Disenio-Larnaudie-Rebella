@@ -1,14 +1,21 @@
+package uy.edu.ort.battleshipdemo.Modelo.Tactica;
+
+import uy.edu.ort.battleshipdemo.Modelo.Disparo;
+
 public class TacticaCazaYAtaque extends Tactica {
 public TacticaCazaYAtaque() {
+        super("Caza y ataque");
     }
 
     @Override
-    public void seleccionarObjetivo() {
-        // Implementación de la selección de objetivo para la táctica de caza y ataque
+    public int[] seleccionarObjetivo(int filas, int columnas) {
+        // TODO: implementar la selección de objetivo de Caza y ataque.
+        throw new UnsupportedOperationException("Pendiente: seleccionar objetivo.");
     }
 
     @Override
-    public void registraResultado() {
-        // Implementación del registro de resultados para la táctica de caza y ataque
+    public void registraResultado(Disparo disparo) {
+        // TODO: decidir qué información necesita conservar Caza y ataque de este disparo.
+        throw new UnsupportedOperationException("Pendiente: registrar resultado.");
     }
 }

@@ -1,3 +1,5 @@
+package uy.edu.ort.battleshipdemo.Modelo;
+
 public class DetalleFlota {
 
     private TipoBarco tipo;
@@ -20,15 +22,18 @@ public class DetalleFlota {
     }
 
     public int getCantidad() {
-        return cantidad;
+        return cantidadBarcos;
     }
 
     public void setCantidad(int cantidad) {
         this.cantidadBarcos = cantidad;
     }
     
-    //calcularCeldas (?)
-    public void calcularCantidadBarcos() {
+    public int calcularCeldas() {
+        // cantidadBarcos multiplicada por el tamaño de tipo.
+    }
 
+    public void validar() {
+        // tipo no nulo y cantidadBarcos entre 0 y 6, inclusive.
     }
 }

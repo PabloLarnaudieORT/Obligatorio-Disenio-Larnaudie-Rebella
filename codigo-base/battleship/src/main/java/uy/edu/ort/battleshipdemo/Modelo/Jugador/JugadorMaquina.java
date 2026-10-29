@@ -1,3 +1,7 @@
+package uy.edu.ort.battleshipdemo.Modelo.Jugador;
+
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.Tactica;
+
 public class JugadorMaquina extends Jugador {
     private String nombre;
     private Tactica tactica;

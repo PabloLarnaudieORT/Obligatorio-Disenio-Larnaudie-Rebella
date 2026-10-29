@@ -1,3 +1,5 @@
+package uy.edu.ort.battleshipdemo.Modelo;
+
 public class Celda {
     private int fila;
     private int columna;

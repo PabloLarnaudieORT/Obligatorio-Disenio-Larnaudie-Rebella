@@ -1,10 +1,14 @@
+package uy.edu.ort.battleshipdemo.Modelo;
+
+import uy.edu.ort.battleshipdemo.excepciones.TipoBarcoException;
+
 public class TipoBarco {
 
     private String nombre;
     private int tamanio;
 
-    public TipoBarco(String nombre, int tamanio) {
-        this.nombre = nombre;
+    public TipoBarco(String nombre, int tamanio) throws TipoBarcoException {
+        setNombre(nombre);
         this.tamanio = tamanio;
     }
 
@@ -15,16 +19,12 @@ public class TipoBarco {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    public void setNombre(String nombre) throws TipoBarcoException {
+        validarNombre(nombre);
         this.nombre = nombre;
-        try {
-            validarNombre();
-        } catch (TipoBarcoException e) {
-            System.err.println("Error al establecer el nombre del tipo de barco: " + e.getMessage());
-        }
     }
 
-    private void validarNombre() throws TipoBarcoException {
+    private void validarNombre(String nombre) throws TipoBarcoException {
         if (nombre == null || nombre.isEmpty()
                 || !nombre.trim().toLowerCase().equals("portaaviones")
                         && !nombre.trim().toLowerCase().equals("destructor")
@@ -39,6 +39,7 @@ public class TipoBarco {
         return tamanio;
     }
 
+    // validar el tamaño antes de asignarlo; conservar los tamaños de la precarga.
     public void setTamanio(int tamanio) {
         this.tamanio = tamanio;
     }

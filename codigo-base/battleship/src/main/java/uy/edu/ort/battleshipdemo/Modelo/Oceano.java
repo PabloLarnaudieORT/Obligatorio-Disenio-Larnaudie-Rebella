@@ -1,7 +1,10 @@
+package uy.edu.ort.battleshipdemo.Modelo;
+
 public class Oceano {
     private int filas;
     private int columnas;
     private Celda[][] celdas;
+    private Flota flota = new Flota();
 
     public Oceano() {
     }
@@ -17,21 +20,30 @@ public class Oceano {
         celdas = new Celda[filas][columnas];
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
-                celdas[i][j] = new Celda();
+                celdas[i][j] = new Celda(i, j, false);
             }
         }
     }
 
-    public void validarUbicacion(){
-        // Implementación de la validación de ubicación en el oceano
-    
+    public void validarUbicacion(Barco barco, int fila, int columna, boolean horizontal) {
+        // barco de esta flota, límites, superposición y separación incluso diagonal.
+        throw new UnsupportedOperationException("Pendiente: validar ubicación.");
     }
 
-    public void ubicarBarco(){
-        // Implementación de la ubicación de un barco en el oceano
+    public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) {
+        // validar primero y luego asignar todas las celdas al barco.
+        throw new UnsupportedOperationException("Pendiente: ubicar barco.");
     }
 
-    public void recibirDisparo(){
-        // Implementación de la recepción de un disparo en el oceano
+    public Disparo recibirDisparo(int fila, int columna) {
+        // validar coordenadas y no repetir celda; determinar Resultado y registrar bajas.
+        throw new UnsupportedOperationException("Pendiente: recibir disparo.");
     }
+
+    public int getFilas() { return filas; }
+    public int getColumnas() { return columnas; }
+    public Celda[][] getCeldas() { return celdas; }
+    public Flota getFlota() { return flota; }
+    public void setFlota(Flota flota) { this.flota = flota; }
+
 }

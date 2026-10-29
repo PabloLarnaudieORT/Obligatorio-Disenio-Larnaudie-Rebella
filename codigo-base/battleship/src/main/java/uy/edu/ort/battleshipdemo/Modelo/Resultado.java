@@ -1,15 +1,17 @@
-public class Resultado {
-    private string resultado;
+package uy.edu.ort.battleshipdemo.Modelo;
 
-    public Resultado(string resultado) {
+public class Resultado {
+    private String resultado;
+
+    public Resultado(String resultado) {
         this.resultado = resultado;
     }
 
-    public string getResultado() {
+    public String getResultado() {
         return resultado;
     }
 
-    public void setResultado(string resultado) {
+    public void setResultado(String resultado) {
         this.resultado = resultado;
     }
 }
