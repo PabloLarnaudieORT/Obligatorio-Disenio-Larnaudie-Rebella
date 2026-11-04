@@ -1,5 +1,7 @@
 package uy.edu.ort.battleshipdemo.Modelo;
 
+import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
+
 public class Oceano {
     private int filas;
     private int columnas;
@@ -15,7 +17,7 @@ public class Oceano {
         generarOceano(filas, columnas);
     }
 
-    private void generarOceano(int filas,int columnas) {
+    private void generarOceano(int filas, int columnas) {
         // Implementación de la generación del océano con celdas
         celdas = new Celda[filas][columnas];
         for (int i = 0; i < filas; i++) {
@@ -27,23 +29,46 @@ public class Oceano {
 
     public void validarUbicacion(Barco barco, int fila, int columna, boolean horizontal) {
         // barco de esta flota, límites, superposición y separación incluso diagonal.
-        throw new UnsupportedOperationException("Pendiente: validar ubicación.");
     }
 
     public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) {
         // validar primero y luego asignar todas las celdas al barco.
-        throw new UnsupportedOperationException("Pendiente: ubicar barco.");
     }
 
-    public Disparo recibirDisparo(int fila, int columna) {
-        // validar coordenadas y no repetir celda; determinar Resultado y registrar bajas.
-        throw new UnsupportedOperationException("Pendiente: recibir disparo.");
+    public Disparo recibirDisparo(int fila, int columna) throws BatallaException {
+        // Nati, aca si una coordenada fila o columna esta fuera del rango, ya hay un
+        // error.
+        if (fila < 0 || fila >= filas || columna < 0 || columna >= columnas) {
+            throw new BatallaException("La posición está fuera del tablero.");
+        }
+        // guardo las celdas en una variable
+        Celda celda = celdas[fila][columna];
+        // consulto si fue disparada.
+        if (celda.isDisparada()) {
+            throw new BatallaException("Ya se ha disparado a esta celda.");
+        } else {
+            celda.setDisparada(true);
+        }
     }
 
-    public int getFilas() { return filas; }
-    public int getColumnas() { return columnas; }
-    public Celda[][] getCeldas() { return celdas; }
-    public Flota getFlota() { return flota; }
-    public void setFlota(Flota flota) { this.flota = flota; }
+    public int getFilas() {
+        return filas;
+    }
+
+    public int getColumnas() {
+        return columnas;
+    }
+
+    public Celda[][] getCeldas() {
+        return celdas;
+    }
+
+    public Flota getFlota() {
+        return flota;
+    }
+
+    public void setFlota(Flota flota) {
+        this.flota = flota;
+    }
 
 }
