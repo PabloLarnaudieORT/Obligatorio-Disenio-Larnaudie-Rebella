@@ -17,6 +17,8 @@ public class Oceano {
         generarOceano(filas, columnas);
     }
 
+    //OJO ACA HAY UN FOR DENRTO DE OTRO FOR, EXPERTO?
+    //lo dejo asi, no encuentro alternativa de momento, luego lo pienso
     private void generarOceano(int filas, int columnas) {
         // Implementación de la generación del océano con celdas
         celdas = new Celda[filas][columnas];
