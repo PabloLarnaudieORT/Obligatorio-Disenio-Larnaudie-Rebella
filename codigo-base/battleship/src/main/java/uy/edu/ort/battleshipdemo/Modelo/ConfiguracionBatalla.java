@@ -56,6 +56,10 @@ public class ConfiguracionBatalla {
         if(totalOcupado == 0) {
             throw new BatallaException("La flota no puede estar vacía.");
         }
+        int tamañoTablero = filas * columnas;
+        if((totalOcupado * 4) >= tamañoTablero) {
+            throw new BatallaException("La ocupacion debe ser menor al 25%.");
+        }
 
     }
 
