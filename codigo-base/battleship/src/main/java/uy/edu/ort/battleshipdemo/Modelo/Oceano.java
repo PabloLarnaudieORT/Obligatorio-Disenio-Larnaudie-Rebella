@@ -17,6 +17,8 @@ public class Oceano {
         generarOceano(filas, columnas);
     }
 
+    // OJO ACA HAY UN FOR DENRTO DE OTRO FOR, EXPERTO?
+    // lo dejo asi, no encuentro alternativa de momento, luego lo pienso
     private void generarOceano(int filas, int columnas) {
         // Implementación de la generación del océano con celdas
         celdas = new Celda[filas][columnas];
@@ -46,8 +48,24 @@ public class Oceano {
         // consulto si fue disparada.
         if (celda.isDisparada()) {
             throw new BatallaException("Ya se ha disparado a esta celda.");
-        } else {
+        }
+        Barco barco = this.getFlota().buscarBarco(celda);
+        if (barco != null) {
+            // si hay un barco voy a disparar
             celda.setDisparada(true);
+            boolean seHundio = barco.estaHundido();
+            if (seHundio) {
+                Resultado resultado1 = new Resultado("Barco hundido");
+                return new Disparo(celda, resultado1);
+            } else {
+                Resultado resultado1 = new Resultado("Impacto");
+                return new Disparo(celda, resultado1);
+            }
+        } else {
+            // si no hay barco, voy a disparar igual PERO el disparo no tiene barco
+            celda.setDisparada(true);
+            Resultado resultado2 = new Resultado("Agua");
+            return new Disparo(celda, resultado2);
         }
     }
 

@@ -24,17 +24,25 @@ public class Flota {
 
     public int partesSanas() {
         // recorrer los barcos y pedir a cada uno sus partes sanas.
-        throw new UnsupportedOperationException("Pendiente: partes sanas de la flota.");
     }
 
     public int tamanioTotal() {
         // sumar los tamaños de los barcos de la flota.
-        throw new UnsupportedOperationException("Pendiente: tamaño total de la flota.");
     }
 
     public boolean estaHundida() {
         // determinar si todos sus barcos están hundidos.
-        throw new UnsupportedOperationException("Pendiente: hundimiento de la flota.");
+    }
+
+    //Aca queremos buscar un barco
+    //Usamos el getCeldas y el contains para ver si la celda pertenece a un barco
+    public Barco buscarBarco(Celda celda) {
+       for (Barco barco : barcos) {
+            if (barco.getCeldas().contains(celda)) {
+                return barco;
+            }
+        }
+        return null;
     }
 
 }
