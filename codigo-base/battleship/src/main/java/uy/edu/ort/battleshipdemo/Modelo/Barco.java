@@ -26,19 +26,21 @@ public class Barco {
     public List<Celda> getCeldas() { return celdas; }
 
     public int partesSanas() {
-        //Aca con nati tenemos que determinar las partes sanas a partir del tamaño y las celdas alcanzadas.
+    //Aca con nati tenemos que determinar las partes sanas a partir del tamaño y las celdas alcanzadas.
     int contador = 0;
     for (Celda celda : celdas) {
-            if (!celda.isDisparada()) {
+            if (celda.isDisparada()) {
                 contador++;
             }
         }
-        return contador;
+        //debemos mostrar las partes sanas para la Sala de Operacionas
+        // cuando la batalla esta en preparacion, por eso decidi contar y restarlo al tamaño.
+        return tipo.getTamanio() - contador;
     }
 
     public boolean estaHundido() {
         //Aca con nati tenemos que comprobar que está posicionado y que no tiene partes sanas.
-        return partesSanas() == 0;
+ 
     }
 
 }
