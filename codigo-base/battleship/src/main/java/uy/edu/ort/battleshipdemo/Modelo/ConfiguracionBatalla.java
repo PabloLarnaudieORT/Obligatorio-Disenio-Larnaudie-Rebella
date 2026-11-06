@@ -58,6 +58,11 @@ public class ConfiguracionBatalla {
 
     public int calcularOcupados() {
         // sumar calcularCeldas() de cada detalle, aplicando Experto.
+        int totalEspacioOcupado = 0;
+        for (DetalleFlota detalle : flota) {
+            totalEspacioOcupado += detalle.calcularCeldas();
+        }
+        return totalEspacioOcupado;
     }
     
 }
