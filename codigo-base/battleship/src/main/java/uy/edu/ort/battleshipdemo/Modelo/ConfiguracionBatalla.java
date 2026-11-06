@@ -52,7 +52,10 @@ public class ConfiguracionBatalla {
             }
             detalle.validar();
         }
-
+        int totalOcupado = this.calcularOcupados();
+        if(totalOcupado == 0) {
+            throw new BatallaException("La flota no puede estar vacía.");
+        }
 
     }
 
