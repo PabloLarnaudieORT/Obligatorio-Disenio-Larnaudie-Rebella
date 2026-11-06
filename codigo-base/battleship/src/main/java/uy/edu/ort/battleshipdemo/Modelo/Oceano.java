@@ -1,6 +1,7 @@
 package uy.edu.ort.battleshipdemo.Modelo;
 
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
+import java.util.List;
 
 public class Oceano {
     private int filas;
@@ -33,7 +34,7 @@ public class Oceano {
         if(barco == null) {
             throw new BatallaException("El barco no puede ser nulo.");
         }
-        Barco[] barcos = flota.getBarcos();
+        List<Barco> barcos = flota.getBarcos();
         boolean incluyeBarco = barcos.contains(barco);
         if (!incluyeBarco) {
             throw new BatallaException("El barco no pertenece a la flota.");
