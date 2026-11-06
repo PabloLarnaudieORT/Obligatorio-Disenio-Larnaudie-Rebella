@@ -30,15 +30,59 @@ public class Oceano {
         }
     }
 
+    //Aca vamos a validar celda con orientacion para el barco.
     public void validarUbicacion(Barco barco, int fila, int columna, boolean horizontal) throws BatallaException {
+        //verifico que el barco no sea null...
         if(barco == null) {
             throw new BatallaException("El barco no puede ser nulo.");
         }
+        //obtengo todos los barcos
         List<Barco> barcos = flota.getBarcos();
+        //verifico que incluya al barco.
         boolean incluyeBarco = barcos.contains(barco);
+        //si no lo incluye largo un error por que no pertenece a la flota.
         if (!incluyeBarco) {
             throw new BatallaException("El barco no pertenece a la flota.");
         }
+        //vamos a gaurdar las celdas del barco para validarlas
+        List<Celda> celdasBarco = barco.getCeldas();
+        //el barco tiene celdas, si fue posicionado
+        if(!celdasBarco.isEmpty()) {//si fuese if(celdasBarco.isEmpty()) -> no esta posicionado.
+            throw new BatallaException("El barco ya esta posicionado.");
+        }
+        //voy a comprobar si la fila o la columna estan fuera del tablero
+        //fila y columna indican donde empieza el barco.
+        if (fila < 0 || fila >= filas || columna < 0 || columna >= columnas) {
+            throw new BatallaException("La posición está fuera del tablero.");
+        }
+        int tamañoBarco = barco.getTipo().getTamanio();
+        int filaFinal = fila;
+        int columnaFinal = columna;
+        if(horizontal) {
+            //hay que restarle - 1 por que sino tenemos un largo mas grande...
+            columnaFinal += tamañoBarco - 1;
+        } else {
+            filaFinal += tamañoBarco - 1;
+        }
+        //ahora, compruebo el final de la columna y de la fila a ver si caen afuera del tablero
+        if(filaFinal >= filas || columnaFinal >= columnas) {
+            throw new BatallaException("El barco no cabe en la posición indicada.");
+        }
+        //falta saber que hay entre medio... sabemos que entra, pero no si hay algo en el medio.
+        for (int i = 0; i < tamañoBarco; i++) {
+            int filaActual = fila;
+            int columnaActual = columna;
+            if(horizontal) {
+                columnaActual += i;
+            } else {
+                filaActual += i;
+            }
+            boolean celdaOcupada = celdas[filaActual][columnaActual].isOcupada();
+            if(celdaOcupada) {
+                throw new BatallaException("La celda ocupada.");
+            }
+        }
+
     }
 
     public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) {
