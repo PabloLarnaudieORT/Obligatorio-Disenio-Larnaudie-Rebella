@@ -77,8 +77,12 @@ public class Oceano {
             } else {
                 filaActual += i;
             }
-            boolean celdaOcupada = celdas[filaActual][columnaActual].isOcupada();
-            if(celdaOcupada) {
+            //cambie la logica, aca guardo celda
+            Celda celdaOcupada = celdas[filaActual][columnaActual];
+            //luego busco el barco y si no es null, significa
+            // que hay un barco en esa celda.
+            Barco barcoOcupado = this.getFlota().buscarBarco(celdaOcupada);
+            if(barcoOcupado != null) {
                 throw new BatallaException("La celda ocupada.");
             }
         }
