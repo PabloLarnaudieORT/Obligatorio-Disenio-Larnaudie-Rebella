@@ -29,8 +29,15 @@ public class Oceano {
         }
     }
 
-    public void validarUbicacion(Barco barco, int fila, int columna, boolean horizontal) {
-        // barco de esta flota, límites, superposición y separación incluso diagonal.
+    public void validarUbicacion(Barco barco, int fila, int columna, boolean horizontal) throws BatallaException {
+        if(barco == null) {
+            throw new BatallaException("El barco no puede ser nulo.");
+        }
+        Barco[] barcos = flota.getBarcos();
+        boolean incluyeBarco = barcos.contains(barco);
+        if (!incluyeBarco) {
+            throw new BatallaException("El barco no pertenece a la flota.");
+        }
     }
 
     public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) {
