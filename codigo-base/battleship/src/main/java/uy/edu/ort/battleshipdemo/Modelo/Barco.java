@@ -27,10 +27,18 @@ public class Barco {
 
     public int partesSanas() {
         //Aca con nati tenemos que determinar las partes sanas a partir del tamaño y las celdas alcanzadas.
+    int contador = 0;
+    for (Celda celda : celdas) {
+            if (!celda.isDisparada()) {
+                contador++;
+            }
+        }
+        return contador;
     }
 
     public boolean estaHundido() {
         //Aca con nati tenemos que comprobar que está posicionado y que no tiene partes sanas.
+        return partesSanas() == 0;
     }
 
 }
