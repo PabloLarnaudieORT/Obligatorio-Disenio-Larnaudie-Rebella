@@ -47,4 +47,9 @@ public class Barco {
         return noEsHundido;
     }
 
+    //Este metodo lo necesitamos para indicarle que celda del ocenao ocupa el barco
+    public void agregarCeldaOcupada(Celda celda) {
+        celdas.add(celda);
+    }
+
 }
