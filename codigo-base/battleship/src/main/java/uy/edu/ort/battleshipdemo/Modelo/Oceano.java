@@ -79,14 +79,7 @@ public class Oceano {
                 //aumentamos 1 la posicion de la fila
                 filaActual += i;
             }
-            //cambie la logica, aca guardo celda
-            Celda celdaOcupada = celdas[filaActual][columnaActual];
-            //luego busco el barco y si no es null, significa
-            // que hay un barco en esa celda.
-            Barco barcoOcupado = this.getFlota().buscarBarco(celdaOcupada);
-            if(barcoOcupado != null) {
-                throw new BatallaException("La celda ocupada.");
-            }
+            validarSeparacion(filaActual, columnaActual);
         }
 
     }
@@ -112,9 +105,9 @@ public class Oceano {
                 //si la columna no es negativa (columnaDeAlLado >= 0 )
                 //Si no supera el valor de las columnas valido ( < columnas )
                 if(filaDeAlLado >= 0 && filaDeAlLado < filas && columnaDeAlLado >= 0 && columnaDeAlLado < columnas) {
-                    Celda celda = celdas[filaDeAlLado][columnaDeAlLado];
-                    Barco barco = this.getFlota().buscarBarco(celda);
-                    if(barco != null) {
+                    Celda celdaOcupada = celdas[filaDeAlLado][columnaDeAlLado];
+                    Barco hayBarco = this.getFlota().buscarBarco(celdaOcupada);
+                    if(hayBarco != null) {
                         throw new BatallaException("El barco se superpone o toca otro barco.");
                     }
                 }
@@ -123,8 +116,23 @@ public class Oceano {
         }
     }
 
-    public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) {
-        // validar primero y luego asignar todas las celdas al barco.
+    public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) throws BatallaException {
+        // primero vamos a tener que validar la ubicacion del barco
+        validarUbicacion(barco, fila, columna, horizontal);
+        int tamañoDelBarco = barco.getTipo().getTamanio();
+        for (int i = 0; i < tamañoDelBarco; i++) {
+            //misma logica que antes, igualamos a fila y a columna y 
+            //luego avanzamos posicion a posicion
+            int filaActual = fila;
+            int columnaActual = columna;
+            if (horizontal) {
+                columnaActual += i;
+            } else {
+                filaActual += i;
+            }
+            Celda celda = celdas[filaActual][columnaActual];
+            barco.agregarCeldaOcupada(celda);
+        }
     }
 
     public Disparo recibirDisparo(int fila, int columna) throws BatallaException {
