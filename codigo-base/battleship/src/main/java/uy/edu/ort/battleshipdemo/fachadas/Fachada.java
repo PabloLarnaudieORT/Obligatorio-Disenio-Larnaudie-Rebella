@@ -1,12 +1,16 @@
 package uy.edu.ort.battleshipdemo.fachadas;
 import uy.edu.ort.battleshipdemo.servicios.SistemaTiposBarco;
+import uy.edu.ort.battleshipdemo.servicios.SistemaBatallas;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
+import uy.edu.ort.battleshipdemo.Modelo.Batalla;
 import java.util.List;
 import uy.edu.ort.battleshipdemo.excepciones.TipoBarcoException;
+import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 
 public class Fachada {
     private static Fachada instancia;
     private SistemaTiposBarco sistemaTiposBarco = SistemaTiposBarco.getInstancia();
+    private SistemaBatallas sistemaBatallas = SistemaBatallas.getInstancia();
 
     public static Fachada getInstancia() {
         if (instancia == null) {
@@ -24,5 +28,16 @@ public class Fachada {
         sistemaTiposBarco.agregarTipoBarco(tipo);
     }
 
-    
+    public List<Batalla> getBatallas() {
+        return sistemaBatallas.getBatallas();
+    }
+
+    public void agregarBatalla(Batalla batalla) throws BatallaException {
+        sistemaBatallas.agregarBatalla(batalla);
+    }
+
+    public Batalla buscarBatalla(String nombreLugar) {
+        return sistemaBatallas.buscarBatalla(nombreLugar);
+    }
+
 }
