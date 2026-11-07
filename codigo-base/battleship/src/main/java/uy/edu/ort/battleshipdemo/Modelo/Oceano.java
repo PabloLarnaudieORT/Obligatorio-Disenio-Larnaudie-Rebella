@@ -167,6 +167,16 @@ public class Oceano {
         }
     }
 
+    //flota le tiene que mandar a ocenao las partes sanas.
+    //sirve para conulstar informacion nada mas.
+    public int partesSanas(){
+        return flota.partesSanas();
+    }
+    //Aca hago lo mismo, le consulto a la flota el tamaño.
+    public int tamañoTotalDeLaFlota() {
+        return flota.tamañoTotalDeLaFlota();
+    }
+
     public int getFilas() {
         return filas;
     }
