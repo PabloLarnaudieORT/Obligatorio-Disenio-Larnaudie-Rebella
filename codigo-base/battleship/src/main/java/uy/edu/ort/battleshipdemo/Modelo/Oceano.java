@@ -73,8 +73,10 @@ public class Oceano {
             int filaActual = fila;
             int columnaActual = columna;
             if(horizontal) {
+                //aumentamos 1 la posicion de la columna
                 columnaActual += i;
             } else {
+                //aumentamos 1 la posicion de la fila
                 filaActual += i;
             }
             //cambie la logica, aca guardo celda
@@ -87,6 +89,38 @@ public class Oceano {
             }
         }
 
+    }
+
+    //EXPLICACION PARA NATI 
+    //Consulte con la IA por tener 2 for... no rompe experto.
+    //es simplemente para poder recorrer las filas y columnas
+    // validamos validarSeparacion(2,3)
+    private void validarSeparacion(int fila, int columna) throws BatallaException {
+        // Implementación de la validación de separación entre barcos
+        // Vamos a ir a la fila de al lado a la que queremos ubicar
+        // fila es la celda central. => 2.
+        // fila - 1, es la fila de abajo => 1.
+        // mientras (1) sea menor o igual a fila(2)+1 = 3. sigue...
+        // 1 fila tiene 3 columnas... antes de sumar una fila hay 3 fors a ser completados.
+        for(int filaDeAlLado = fila - 1; filaDeAlLado <= fila + 1; filaDeAlLado++) {
+            //Aca la costa es igual... columna es 3.
+            //columnaDeAlLado = 2. (columna 3-1 = 2).
+            //mientras que 2 sigue siendo menor o igual a 3+1 = 4. sigue...
+            for(int columnaDeAlLado = columna - 1; columnaDeAlLado <= columna + 1; columnaDeAlLado++) {
+                //entonces, si la fila no es negativa (filaDeAlLado >= 0 )
+                //si no supera el valor de las filas valido ( < filas )
+                //si la columna no es negativa (columnaDeAlLado >= 0 )
+                //Si no supera el valor de las columnas valido ( < columnas )
+                if(filaDeAlLado >= 0 && filaDeAlLado < filas && columnaDeAlLado >= 0 && columnaDeAlLado < columnas) {
+                    Celda celda = celdas[filaDeAlLado][columnaDeAlLado];
+                    Barco barco = this.getFlota().buscarBarco(celda);
+                    if(barco != null) {
+                        throw new BatallaException("El barco se superpone o toca otro barco.");
+                    }
+                }
+
+            }
+        }
     }
 
     public void ubicarBarco(Barco barco, int fila, int columna, boolean horizontal) {
