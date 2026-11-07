@@ -24,14 +24,39 @@ public class Flota {
 
     public int partesSanas() {
         // recorrer los barcos y pedir a cada uno sus partes sanas.
+        int totalDeLasPartesSana = 0;
+        //cada barco sabe su parte sana, debe decirnos él cuanto sano tiene.
+        for (Barco barco : barcos) {
+            totalDeLasPartesSana += barco.partesSanas();
+        }
+        return totalDeLasPartesSana;
     }
 
-    public int tamanioTotal() {
+    public int tamañoTotalDeLaFlota() {
         // sumar los tamaños de los barcos de la flota.
+        int totalDeLosTamaños = 0;
+        //cada barco sabe su tamaño, entonces vamos a obtenerlos con el metodo getTamañoDelBarco
+        for (Barco barco : barcos) {
+            totalDeLosTamaños += barco.getTamañoDelBarco();
+        }
+        return totalDeLosTamaños;
     }
 
     public boolean estaHundida() {
-        // determinar si todos sus barcos están hundidos.
+        // Si no hay barcos, la flota no puede estar hundida
+        if(barcos.isEmpty()) {
+            return false; 
+        }
+        // voy a preguntarle a cada barco si NO esta hundido.
+        // si NO ESTA hundido devuelvo false..
+        for(Barco barco : barcos) {
+            //con que uno ya no este hundido, nos alcanza para cortar el recorrido.
+            if (!barco.estaHundido()) {
+                return false;
+            }
+        }
+        //Si estan todos hundidos, entonces devolvemos true.. por que la flota esta hundida.
+        return true;
     }
 
     //Aca queremos buscar un barco

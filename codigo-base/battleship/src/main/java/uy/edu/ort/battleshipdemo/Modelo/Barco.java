@@ -52,4 +52,9 @@ public class Barco {
         celdas.add(celda);
     }
 
+    public int getTamañoDelBarco() {
+        // este metodo obtiene el tamaño de un barco.
+        return tipo.getTamanio();
+    }
+
 }
