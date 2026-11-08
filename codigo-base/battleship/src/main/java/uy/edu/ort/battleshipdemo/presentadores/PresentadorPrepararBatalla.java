@@ -4,11 +4,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.context.annotation.Scope;
 import uy.edu.ort.battleshipdemo.Commands;
+import uy.edu.ort.battleshipdemo.Command;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import uy.edu.ort.battleshipdemo.Command;
 import uy.edu.ort.battleshipdemo.DTOs.TipoBarcoDto;
 import uy.edu.ort.battleshipdemo.DTOs.PrepararBatallaDto;
 import uy.edu.ort.battleshipdemo.DTOs.CantidadBarcoDto;
@@ -58,5 +58,11 @@ public class PresentadorPrepararBatalla {
         configuracion.setFlota(listaDeFlotas);
         configuracion.validar();
         return configuracion;
+    }
+
+    @PostMapping ("/prepararBatalla")
+    public Commands prepararBatalla(PrepararBatallaDto datos)throws BatallaException{
+        ConfiguracionBatalla configuracionBatalla = crearConfiguracion(datos);
+        return Commands.create();
     }
 }
