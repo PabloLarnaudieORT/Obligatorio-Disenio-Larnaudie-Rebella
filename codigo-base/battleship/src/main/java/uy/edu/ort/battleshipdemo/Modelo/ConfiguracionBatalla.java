@@ -1,13 +1,18 @@
 package uy.edu.ort.battleshipdemo.Modelo;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
+import java.util.List;
 
 public class ConfiguracionBatalla {
     private int filas;
     private int columnas;
-    private DetalleFlota[] flota;
+    private List<DetalleFlota> flotas;
     
     public ConfiguracionBatalla() {
     }
+
+    public ConfiguracionBatalla(List<DetalleFlota> flotas) {
+        this.flotas = flotas;
+    }   
 
     public int getFilas() {
         return filas;
@@ -25,12 +30,12 @@ public class ConfiguracionBatalla {
         this.columnas = columnas;
     }
 
-    public DetalleFlota[] getFlota() {
-        return flota;
+    public List<DetalleFlota> getFlota() {
+        return flotas;
     }
 
-    public void setFlota(DetalleFlota[] flota) {
-        this.flota = flota;
+    public void setFlota(List<DetalleFlota> flotas) {
+        this.flotas = flotas;
     }
 
     public void validar() throws BatallaException {
@@ -42,11 +47,11 @@ public class ConfiguracionBatalla {
             throw new BatallaException("El número de columnas debe estar entre 6 y 12.");
         }
         // flota no nula hayq que validar cada DetalleFlota.
-        if(flota == null || flota.length == 0) {
+        if(flotas == null || flotas.isEmpty()) {
             throw new BatallaException("La flota no puede ser nula o vacía.");
         }
         //Si todo lo anterior no falló, entonces recorro la flota
-        for (DetalleFlota detalle : flota) {
+        for (DetalleFlota detalle : flotas) {
             if(detalle == null) {
                 throw new BatallaException("Detalle de flota no puede ser nulo.");
             }
@@ -66,7 +71,7 @@ public class ConfiguracionBatalla {
     public int calcularOcupados() {
         // sumar calcularCeldas() de cada detalle, aplicando Experto.
         int totalEspacioOcupado = 0;
-        for (DetalleFlota detalle : flota) {
+        for (DetalleFlota detalle : flotas) {
             totalEspacioOcupado += detalle.calcularCeldas();
         }
         return totalEspacioOcupado;
