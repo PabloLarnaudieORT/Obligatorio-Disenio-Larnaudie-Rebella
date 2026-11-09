@@ -1,4 +1,5 @@
 package uy.edu.ort.battleshipdemo.servicios;
+
 import uy.edu.ort.battleshipdemo.Modelo.Batalla;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,20 +17,27 @@ public class SistemaBatallas {
         }
         return instancia;
     }
+
     private SistemaBatallas() {
         this.batallas = new ArrayList<>();
     }
 
-    //Nati, letra dice que hay que generar nombre al azar
-    private String generarLugar(){
+    // Nati, letra dice que hay que generar nombre al azar si queda vacio.
+    private String generarLugar() {
         String letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        Random azar = new Random(); //averigue como generar algo random y es asi.
+        Random azar = new Random(); // averigue como generar algo random y es asi.
         String nombreDelLugar = "";
-        //le pregunté a la IA como generar un nombre al azar.
-        for(int i = 0; i<=6; i++){
-            azar.nextInt(letras.length());
-        }
-        return "";
+        //intente usando if... pero no funciono
+        //entonces usé do while, para ver si el nombre esta ocupado
+        do {
+            nombreDelLugar = "";
+            // le pregunté a la IA como generar un nombre al azar.
+            for (int i = 0; i < 6; i++) {
+                int posicion = azar.nextInt(letras.length());
+                nombreDelLugar += letras.charAt(posicion);
+            }
+        } while (buscarBatalla(nombreDelLugar) != null);
+        return nombreDelLugar;
     }
 
     public void agregarBatalla(Batalla batalla) throws BatallaException {
@@ -37,8 +45,10 @@ public class SistemaBatallas {
             throw new BatallaException("La batalla no puede ser nula");
         }
         String nombreLugar = batalla.getLugar();
-        if(nombreLugar == null || nombreLugar.isEmpty()) {
-            throw new BatallaException("El lugar de la batalla no puede ser nulo o vacío");
+        if (nombreLugar == null || nombreLugar.isEmpty()) {
+            //debido a que no puede ser vacio el nombre, vamos a poner generarLugar
+            nombreLugar = generarLugar();
+            batalla.setLugar(nombreLugar);
         }
         if (buscarBatalla(nombreLugar) != null) {
             throw new BatallaException("Ya existe una batalla en el lugar: " + nombreLugar);
@@ -56,8 +66,8 @@ public class SistemaBatallas {
                 return batalla;
             }
         }
-        //no devuelvo excepcion, por que si el lugar esta disponible
-        //no puedo tirar una excepcion batalla... 
+        // no devuelvo excepcion, por que si el lugar esta disponible
+        // no puedo tirar una excepcion batalla...
         return null;
     }
 }
