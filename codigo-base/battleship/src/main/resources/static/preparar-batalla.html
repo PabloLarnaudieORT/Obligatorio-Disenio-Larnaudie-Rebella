@@ -88,6 +88,9 @@
             border-radius: 4px; background: #1b6398; color: white;
             font: inherit; cursor: pointer; }
         button:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        #seccionBarcosPreparacion { margin-top: 32px; padding-top: 16px;
+            border-top: 1px solid #d5dfe8; }
+        #estadoBarcosPreparacion[data-error="true"] { color: #a51f2d; }
         #resultadoValidacion[data-error="true"] { color: #a51f2d; }
         #estadoCatalogo { margin-bottom: 0; }
         #estadoCatalogo[data-error="true"] { color: #a51f2d; }
@@ -137,6 +140,24 @@
         <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
         <p id="resultadoValidacion" role="status" aria-live="polite"></p>
         </form>
+        <section id="seccionBarcosPreparacion" aria-labelledby="tituloBarcosPreparacion" hidden>
+            <h2 id="tituloBarcosPreparacion">Ubicación de la flota</h2>
+            <div class="tabla-contenedor">
+                <table>
+                    <caption>Barcos de tu flota</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Barco</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Tamaño</th>
+                            <th scope="col">Ubicación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="barcosPreparacion"></tbody>
+                </table>
+            </div>
+            <p id="estadoBarcosPreparacion" role="status" aria-live="polite"></p>
+        </section>
         <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
     </main>
 
@@ -215,6 +236,41 @@
             mostrarEstado(tipos.length === 0
                 ? "No hay tipos de barco disponibles."
                 : "Indicá la cantidad de barcos de cada tipo. Podés elegir de 0 a 6.");
+        });
+
+        // Representar los DTOs recibidos sin calcular ubicación ni modificar el modelo.
+        view.handler("barcosPreparacion", (barcos) => {
+            const seccion = document.getElementById("seccionBarcosPreparacion");
+            const cuerpo = document.getElementById("barcosPreparacion");
+            const estado = document.getElementById("estadoBarcosPreparacion");
+            seccion.hidden = false;
+            cuerpo.replaceChildren();
+            if (!Array.isArray(barcos)) {
+                estado.textContent = "No se pudo mostrar la lista de barcos.";
+                estado.dataset.error = "true";
+                return;
+            }
+            barcos.forEach((barco) => {
+                const fila = document.createElement("tr");
+                // Conservar el índice del servidor; el número visible empieza en uno.
+                fila.dataset.indice = String(barco.indice);
+                const valores = [
+                    Number(barco.indice) + 1,
+                    barco.nombreTipo,
+                    barco.tamaño,
+                    barco.barcoUbicado ? "Ubicado" : "Pendiente de ubicación"
+                ];
+                valores.forEach((valor) => {
+                    const celda = document.createElement("td");
+                    celda.textContent = String(valor);
+                    fila.appendChild(celda);
+                });
+                cuerpo.appendChild(fila);
+            });
+            estado.dataset.error = "false";
+            estado.textContent = barcos.length === 0
+                ? "No hay barcos en esta flota."
+                : "Estado de ubicación de los barcos de tu flota.";
         });
 
         view.handler("configuracionValidada", (mensaje) => {
