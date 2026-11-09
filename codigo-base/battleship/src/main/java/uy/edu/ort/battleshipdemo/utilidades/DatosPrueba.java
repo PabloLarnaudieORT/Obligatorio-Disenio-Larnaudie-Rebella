@@ -4,6 +4,7 @@ import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
 import uy.edu.ort.battleshipdemo.Modelo.Barco;
 import uy.edu.ort.battleshipdemo.Modelo.Celda;
 import uy.edu.ort.battleshipdemo.Modelo.Flota;
+import uy.edu.ort.battleshipdemo.Modelo.Oceano;
 import uy.edu.ort.battleshipdemo.Modelo.DetalleFlota;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
 import uy.edu.ort.battleshipdemo.fachadas.Fachada;
@@ -202,6 +203,96 @@ public class DatosPrueba {
                 }
                 System.out.println((cambioAislado ? "OK" : "ERROR") + " | Agregar una celda a un barco no cambia los demás.");
                 System.out.println("--- Fin de la comprobación de creación de flotas ---");
+        }
+
+        // Datos y comprobaciones manuales generados con ayuda de IA.
+        // Trabaja con océanos locales; no registra batallas ni cambia el arranque.
+        public static void probarCreacionOceanos() throws TipoBarcoException, BatallaException {
+                TipoBarco acorazado = new TipoBarco("Acorazado", 4);
+                TipoBarco submarino = new TipoBarco("Submarino", 2);
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(acorazado, 2));
+                detalles.add(new DetalleFlota(submarino, 1));
+                // Tablero rectangular para detectar si se intercambian filas y columnas.
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 10, detalles);
+                Oceano primero = configuracion.crearOceano();
+                Oceano segundo = configuracion.crearOceano();
+                List<Oceano> oceanos = new ArrayList<>();
+                oceanos.add(primero);
+                oceanos.add(segundo);
+
+                boolean dimensionesCorrectas = true;
+                boolean celdasCorrectas = true;
+                boolean celdasIndependientes = primero != segundo
+                                && primero.getCeldas() != segundo.getCeldas();
+                boolean barcosSinUbicar = true;
+                boolean composicionCorrecta = true;
+                List<Celda> celdasVistas = new ArrayList<>();
+                for (Oceano oceano : oceanos) {
+                        if (oceano.getFilas() != 8 || oceano.getColumnas() != 10
+                                        || oceano.getCeldas().length != 8) dimensionesCorrectas = false;
+                        for (int fila = 0; fila < oceano.getCeldas().length; fila++) {
+                                if (oceano.getCeldas()[fila].length != 10) dimensionesCorrectas = false;
+                                for (int columna = 0; columna < oceano.getCeldas()[fila].length; columna++) {
+                                        Celda celda = oceano.getCeldas()[fila][columna];
+                                        if (celda == null) {
+                                                celdasCorrectas = false;
+                                        } else {
+                                                if (celda.getFila() != fila || celda.getColumna() != columna
+                                                                || celda.isDisparada()) celdasCorrectas = false;
+                                                if (celdasVistas.contains(celda)) celdasIndependientes = false;
+                                                celdasVistas.add(celda);
+                                        }
+                                }
+                        }
+                        int cantidadAcorazados = 0;
+                        int cantidadSubmarinos = 0;
+                        for (Barco barco : oceano.getFlota().getBarcos()) {
+                                if (barco.getTipo() == acorazado) cantidadAcorazados++;
+                                if (barco.getTipo() == submarino) cantidadSubmarinos++;
+                                if (barco.estaUbicado() || !barco.getCeldas().isEmpty()) barcosSinUbicar = false;
+                        }
+                        if (oceano.getFlota().getBarcos().size() != 3
+                                        || cantidadAcorazados != 2 || cantidadSubmarinos != 1) composicionCorrecta = false;
+                }
+                boolean flotasIndependientes = primero.getFlota() != segundo.getFlota()
+                                && primero.getFlota().getBarcos() != segundo.getFlota().getBarcos();
+                for (Barco barcoPrimero : primero.getFlota().getBarcos()) {
+                        for (Barco barcoSegundo : segundo.getFlota().getBarcos()) {
+                                if (barcoPrimero == barcoSegundo
+                                                || barcoPrimero.getCeldas() == barcoSegundo.getCeldas()) flotasIndependientes = false;
+                        }
+                }
+
+                System.out.println("--- Comprobación de creación de océanos ---");
+                System.out.println((dimensionesCorrectas ? "OK" : "ERROR") + " | Ambos tableros tienen 8 filas y 10 columnas.");
+                System.out.println((celdasCorrectas ? "OK" : "ERROR") + " | Celdas inicializadas con coordenadas correctas y sin disparos.");
+                System.out.println((celdasIndependientes ? "OK" : "ERROR") + " | Los océanos y sus celdas son independientes.");
+                System.out.println((composicionCorrecta ? "OK" : "ERROR") + " | Cada océano tiene dos acorazados y un submarino.");
+                System.out.println((barcosSinUbicar ? "OK" : "ERROR") + " | Todos los barcos comienzan sin ubicar.");
+                System.out.println((flotasIndependientes ? "OK" : "ERROR") + " | Las flotas, barcos y listas de celdas no se comparten.");
+
+                Barco barcoUbicado = primero.getFlota().getBarcos().get(0);
+                primero.ubicarBarco(barcoUbicado, 0, 0, true);
+                boolean ubicacionCorrecta = barcoUbicado.estaUbicado()
+                                && barcoUbicado.getCeldas().size() == 4;
+                for (int columna = 0; columna < 4; columna++) {
+                        if (!barcoUbicado.getCeldas().contains(primero.getCeldas()[0][columna])
+                                        || primero.getFlota().buscarBarco(primero.getCeldas()[0][columna]) != barcoUbicado) ubicacionCorrecta = false;
+                }
+                boolean cambioAislado = true;
+                for (int i = 1; i < primero.getFlota().getBarcos().size(); i++) {
+                        if (!primero.getFlota().getBarcos().get(i).getCeldas().isEmpty()) cambioAislado = false;
+                }
+                for (Barco barco : segundo.getFlota().getBarcos()) {
+                        if (barco.estaUbicado() || !barco.getCeldas().isEmpty()) cambioAislado = false;
+                }
+                for (Celda celda : celdasVistas) {
+                        if (celda.isDisparada()) cambioAislado = false;
+                }
+                System.out.println((ubicacionCorrecta ? "OK" : "ERROR") + " | El acorazado queda ubicado en las cuatro celdas de su océano.");
+                System.out.println((cambioAislado ? "OK" : "ERROR") + " | Ubicarlo no modifica los otros barcos ni marca disparos.");
+                System.out.println("--- Fin de la comprobación de creación de océanos ---");
         }
 
         private static ConfiguracionBatalla crearConfiguracion(int filas, int columnas, List<DetalleFlota> detalles) {
