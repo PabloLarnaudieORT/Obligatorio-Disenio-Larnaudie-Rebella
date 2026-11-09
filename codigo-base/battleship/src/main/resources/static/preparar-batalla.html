@@ -78,6 +78,13 @@
             outline-offset: 2px;
         }
 
+        .dimensiones { display: flex; flex-wrap: wrap; gap: 20px; }
+        .dimensiones label { display: grid; gap: 8px; }
+        button { padding: 12px 18px; margin-top: 20px; border: 0;
+            border-radius: 4px; background: #1b6398; color: white;
+            font: inherit; cursor: pointer; }
+        button:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        #resultadoValidacion[data-error="true"] { color: #a51f2d; }
         #estadoCatalogo { margin-bottom: 0; }
         #estadoCatalogo[data-error="true"] { color: #a51f2d; }
 
@@ -93,6 +100,15 @@
         <h1>Preparar una nueva batalla</h1>
         <p>Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
 
+        <form id="formularioFlota" novalidate>
+        <div class="dimensiones">
+            <label for="filas">Filas (6 a 12)
+                <input id="filas" name="filas" type="number" value="6" min="6" max="12" step="1">
+            </label>
+            <label for="columnas">Columnas (6 a 12)
+                <input id="columnas" name="columnas" type="number" value="6" min="6" max="12" step="1">
+            </label>
+        </div>
         <div class="tabla-contenedor">
             <table>
                 <caption>Composición de la flota</caption>
@@ -108,6 +124,10 @@
             </table>
         </div>
         <p id="estadoCatalogo" role="status" aria-live="polite">Cargando tipos de barco...</p>
+        <button type="submit">Validar flota</button>
+        <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
+        <p id="resultadoValidacion" role="status" aria-live="polite"></p>
+        </form>
         <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
     </main>
 
@@ -117,6 +137,15 @@
         const cuerpoTabla = document.getElementById("tiposBarco");
         const estadoCatalogo = document.getElementById("estadoCatalogo");
 
+        const formulario = document.getElementById("formularioFlota");
+        const resultado = document.getElementById("resultadoValidacion");
+        let enviandoValidacion = false;
+
+        function mostrarResultado(mensaje, esError = false) {
+            resultado.textContent = mensaje;
+            resultado.dataset.error = String(esError);
+        }
+
         function mostrarEstado(mensaje, esError = false) {
             estadoCatalogo.textContent = mensaje;
             estadoCatalogo.dataset.error = String(esError);
@@ -124,8 +153,14 @@
 
         const view = dispatcher.registerView("preparar-batalla", {
             urlInicio: "/preparacion-batalla/vistaConectada",
-            onError: () => mostrarEstado("No se pudieron cargar los tipos de barco. Intentá nuevamente más tarde.", true),
-            onException: (mensaje) => mostrarEstado(mensaje, true)
+            onError: () => {
+                if (enviandoValidacion) {
+                    mostrarResultado("No se pudo validar la flota. Revisá los valores ingresados e intentá nuevamente.", true);
+                } else {
+                    mostrarEstado("No se pudieron cargar los tipos de barco. Intentá nuevamente más tarde.", true);
+                }
+            },
+            onException: (mensaje) => mostrarResultado(mensaje, true)
         });
 
         function crearFila(tipo, indice, cantidad) {
@@ -171,6 +206,30 @@
             mostrarEstado(tipos.length === 0
                 ? "No hay tipos de barco disponibles."
                 : "Indicá la cantidad de barcos de cada tipo. Podés elegir de 0 a 6.");
+        });
+
+        view.handler("configuracionValidada", (mensaje) => {
+            mostrarResultado(mensaje);
+        });
+
+        formulario.addEventListener("input", () => mostrarResultado(""));
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const datos = {
+                filas: document.getElementById("filas").value,
+                columnas: document.getElementById("columnas").value
+            };
+            cuerpoTabla.querySelectorAll("input").forEach((entrada, indice) => {
+                datos[`cantidadesBarcos[${indice}].nombreTipo`] = entrada.dataset.tipoBarco;
+                datos[`cantidadesBarcos[${indice}].cantidad`] = entrada.value;
+            });
+            mostrarResultado("Validando flota...");
+            enviandoValidacion = true;
+            try {
+                await dispatcher.submit("/preparacion-batalla/prepararBatalla", datos);
+            } finally {
+                enviandoValidacion = false;
+            }
         });
 
         // Iniciar después de registrar el manejador, para recibir la primera respuesta.

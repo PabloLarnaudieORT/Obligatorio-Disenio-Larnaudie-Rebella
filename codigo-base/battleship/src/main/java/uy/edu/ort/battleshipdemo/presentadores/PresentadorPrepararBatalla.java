@@ -1,4 +1,5 @@
 package uy.edu.ort.battleshipdemo.presentadores;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,20 +38,22 @@ public class PresentadorPrepararBatalla {
                 "tiposBarco",
                 TipoBarcoDto.listaDtos(fachada.getTiposBarco()));
     }
-    private ConfiguracionBatalla crearConfiguracion(PrepararBatallaDto datos)throws BatallaException{
-        //primero creo una instancia de ConfiguracionBatalla
+
+    private ConfiguracionBatalla crearConfiguracion(PrepararBatallaDto datos) throws BatallaException {
+        // primero creo una instancia de ConfiguracionBatalla
         ConfiguracionBatalla configuracion = new ConfiguracionBatalla();
         List<DetalleFlota> listaDeFlotas = new ArrayList<>();
-        //datos, tiene la cantidades de barcos, para armar la flota
+        // datos, tiene la cantidades de barcos, para armar la flota
         List<CantidadBarcoDto> cantidadesEnDto = datos.getCantidadesBarcos();
-        //luego, uso las filas y columnas de los datos
+        // luego, uso las filas y columnas de los datos
         int filas = datos.getFilas();
         int columnas = datos.getColumnas();
-        //y las uso para configurar todo.
+        // y las uso para configurar todo.
         configuracion.setFilas(filas);
         configuracion.setColumnas(columnas);
-        //despues, recorro las cantidades recibidas para construir los detalles de la flota.
-        for (CantidadBarcoDto cantidadDto : cantidadesEnDto){
+        // despues, recorro las cantidades recibidas para construir los detalles de la
+        // flota.
+        for (CantidadBarcoDto cantidadDto : cantidadesEnDto) {
             TipoBarco tipoBarco = fachada.buscarTipoBarco(cantidadDto.getNombreTipo());
             DetalleFlota detalle = new DetalleFlota(tipoBarco, cantidadDto.getCantidad());
             listaDeFlotas.add(detalle);
@@ -60,9 +63,9 @@ public class PresentadorPrepararBatalla {
         return configuracion;
     }
 
-    @PostMapping ("/prepararBatalla")
-    public Commands prepararBatalla(PrepararBatallaDto datos)throws BatallaException{
+    @PostMapping("/prepararBatalla")
+    public Commands prepararBatalla(PrepararBatallaDto datos) throws BatallaException {
         ConfiguracionBatalla configuracionBatalla = crearConfiguracion(datos);
-        return Commands.create();
+        return Commands.create(new Command("configuracionValidada", "La configuracion de la flota es valida"));
     }
 }
