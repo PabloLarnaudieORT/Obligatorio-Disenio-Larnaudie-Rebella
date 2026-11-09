@@ -78,6 +78,10 @@
             outline-offset: 2px;
         }
 
+        .campo-lugar { display: grid; gap: 8px; margin-bottom: 20px; }
+        .campo-lugar input { width: 100%; max-width: 420px; padding: 10px;
+            border: 1px solid #8a9eaf; border-radius: 4px; font: inherit; }
+        .campo-lugar small { color: #445d73; }
         .dimensiones { display: flex; flex-wrap: wrap; gap: 20px; }
         .dimensiones label { display: grid; gap: 8px; }
         button { padding: 12px 18px; margin-top: 20px; border: 0;
@@ -101,6 +105,11 @@
         <p>Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
 
         <form id="formularioFlota" novalidate>
+        <div class="campo-lugar">
+            <label for="lugarBatalla">Lugar de la batalla (opcional)</label>
+            <input id="lugarBatalla" name="lugarBatalla" type="text" aria-describedby="ayudaLugar">
+            <small id="ayudaLugar">Si lo dejás vacío, se asignará un nombre de seis letras mayúsculas al crear la batalla.</small>
+        </div>
         <div class="dimensiones">
             <label for="filas">Filas (6 a 12)
                 <input id="filas" name="filas" type="number" value="6" min="6" max="12" step="1">
@@ -216,6 +225,7 @@
         formulario.addEventListener("submit", async (evento) => {
             evento.preventDefault();
             const datos = {
+                lugarBatalla: document.getElementById("lugarBatalla").value,
                 filas: document.getElementById("filas").value,
                 columnas: document.getElementById("columnas").value
             };

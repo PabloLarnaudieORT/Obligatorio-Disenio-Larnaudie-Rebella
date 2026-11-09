@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import uy.edu.ort.battleshipdemo.DTOs.TipoBarcoDto;
 import uy.edu.ort.battleshipdemo.DTOs.PrepararBatallaDto;
 import uy.edu.ort.battleshipdemo.DTOs.CantidadBarcoDto;
+import uy.edu.ort.battleshipdemo.DTOs.BarcoPreparacionDto;
 import uy.edu.ort.battleshipdemo.fachadas.Fachada;
 import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
 import uy.edu.ort.battleshipdemo.Modelo.DetalleFlota;
+import uy.edu.ort.battleshipdemo.Modelo.Flota;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 
@@ -61,6 +63,10 @@ public class PresentadorPrepararBatalla {
         configuracion.setFlota(listaDeFlotas);
         configuracion.validar();
         return configuracion;
+    }
+
+    private Command barcosPreparacion(Flota flota) {
+        return new Command("barcosPreparacion", BarcoPreparacionDto.listaDtos(flota.getBarcos()));
     }
 
     @PostMapping("/prepararBatalla")
