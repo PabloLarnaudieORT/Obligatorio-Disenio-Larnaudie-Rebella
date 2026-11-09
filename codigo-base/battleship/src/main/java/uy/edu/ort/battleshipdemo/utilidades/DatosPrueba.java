@@ -1,6 +1,9 @@
 package uy.edu.ort.battleshipdemo.utilidades;
 
 import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
+import uy.edu.ort.battleshipdemo.Modelo.Barco;
+import uy.edu.ort.battleshipdemo.Modelo.Celda;
+import uy.edu.ort.battleshipdemo.Modelo.Flota;
 import uy.edu.ort.battleshipdemo.Modelo.DetalleFlota;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
 import uy.edu.ort.battleshipdemo.fachadas.Fachada;
@@ -133,6 +136,72 @@ public class DatosPrueba {
                 detalles16.add(new DetalleFlota(acorazado, 3));
                 comprobar("6 x 6, tres acorazados: 12 celdas, supera el 25%", crearConfiguracion(6, 6, detalles16), false, -1);
 
+        }
+
+        // Comprobación manual con datos generados con ayuda de IA.
+        // No registra batallas ni se ejecuta automáticamente al iniciar la aplicación.
+        public static void probarCreacionFlotas() throws TipoBarcoException, BatallaException {
+                TipoBarco acorazado = new TipoBarco("Acorazado", 4);
+                TipoBarco submarino = new TipoBarco("Submarino", 2);
+                TipoBarco destructor = new TipoBarco("Destructor", 1);
+
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(acorazado, 2));
+                detalles.add(new DetalleFlota(submarino, 1));
+                detalles.add(new DetalleFlota(destructor, 0));
+                // Diez celdas en un tablero de 8 x 8: menos del 25 %.
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 8, detalles);
+                Flota flotaHumana = configuracion.crearFlota();
+                Flota flotaMaquina = configuracion.crearFlota();
+
+                System.out.println("--- Comprobación de creación de flotas ---");
+                List<Flota> flotasCreadas = new ArrayList<>();
+                flotasCreadas.add(flotaHumana);
+                flotasCreadas.add(flotaMaquina);
+                for (Flota flota : flotasCreadas) {
+                        int acorazados = 0;
+                        int submarinos = 0;
+                        int destructores = 0;
+                        boolean sinUbicar = true;
+                        boolean barcosDistintos = true;
+                        for (Barco barco : flota.getBarcos()) {
+                                if (barco.getTipo() == acorazado) acorazados++;
+                                if (barco.getTipo() == submarino) submarinos++;
+                                if (barco.getTipo() == destructor) destructores++;
+                                if (barco.estaUbicado() || !barco.getCeldas().isEmpty()) sinUbicar = false;
+                        }
+                        for (int i = 0; i < flota.getBarcos().size(); i++) {
+                                for (int j = i + 1; j < flota.getBarcos().size(); j++) {
+                                        if (flota.getBarcos().get(i) == flota.getBarcos().get(j)) barcosDistintos = false;
+                                }
+                        }
+                        boolean cantidadesCorrectas = flota.getBarcos().size() == 3
+                                        && acorazados == 2 && submarinos == 1 && destructores == 0;
+                        System.out.println((cantidadesCorrectas ? "OK" : "ERROR") + " | Dos acorazados, un submarino y ningún destructor.");
+                        System.out.println((sinUbicar ? "OK" : "ERROR") + " | Todos los barcos comienzan sin celdas y sin ubicar.");
+                        System.out.println((barcosDistintos ? "OK" : "ERROR") + " | Los barcos de una misma flota son objetos distintos.");
+                }
+
+                boolean independientes = flotaHumana != flotaMaquina
+                                && flotaHumana.getBarcos() != flotaMaquina.getBarcos();
+                for (Barco humano : flotaHumana.getBarcos()) {
+                        for (Barco maquina : flotaMaquina.getBarcos()) {
+                                if (humano == maquina || humano.getCeldas() == maquina.getCeldas()) independientes = false;
+                        }
+                }
+                System.out.println((independientes ? "OK" : "ERROR") + " | Las flotas no comparten barcos ni listas de celdas.");
+
+                // Cambiar una celda de un barco no debe afectar a los demás.
+                flotaHumana.getBarcos().get(0).agregarCeldaOcupada(new Celda(0, 0, false));
+                boolean cambioAislado = flotaHumana.getBarcos().get(0).getCeldas().size() == 1;
+                for (int i = 1; i < flotaHumana.getBarcos().size(); i++) {
+                        if (!flotaHumana.getBarcos().get(i).getCeldas().isEmpty()) cambioAislado = false;
+                }
+                for (Barco barco : flotaMaquina.getBarcos()) {
+                        if (!barco.getCeldas().isEmpty()) cambioAislado = false;
+                }
+                System.out.println((cambioAislado ? "OK" : "ERROR") + " | Agregar una celda a un barco no cambia los demás.");
+                System.out.println("--- Fin de la comprobación de creación de flotas ---");
         }
 
         private static ConfiguracionBatalla crearConfiguracion(int filas, int columnas, List<DetalleFlota> detalles) {
