@@ -1,5 +1,8 @@
 package uy.edu.ort.battleshipdemo.Modelo;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
+import java.util.ArrayList;
+import java.util.List;
+import uy.edu.ort.battleshipdemo.Modelo.Barco;
 
 public class DetalleFlota {
 
@@ -44,5 +47,16 @@ public class DetalleFlota {
         if (cantidadBarcos < 0 || cantidadBarcos > 6) {
             throw new BatallaException("La cantidad de barcos debe estar entre 0 y 6.");
         }
+    }
+    //es responsabilidad del DetalleFlota crear un uevo barco
+    //dentro de la flota
+    public List<Barco> crearBarcos()throws BatallaException{
+        validar();
+        List<Barco> barcos = new ArrayList<>();
+        for(int i = 0 ; i < cantidadBarcos ; i++){
+            Barco nuevo = new Barco(tipo);
+            barcos.add(nuevo);
+        }
+        return barcos;
     }
 }

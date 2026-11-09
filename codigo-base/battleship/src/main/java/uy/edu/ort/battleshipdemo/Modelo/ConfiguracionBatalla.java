@@ -76,5 +76,17 @@ public class ConfiguracionBatalla {
         }
         return totalEspacioOcupado;
     }
+
+    public Flota crearFlota() throws BatallaException{
+        validar();
+        Flota nuevaFlota = new Flota();
+        for(DetalleFlota detalle : flotas){
+            List<Barco> barcos = detalle.crearBarcos();
+            for(Barco barco:barcos){
+                nuevaFlota.agregarBarco(barco);
+            }
+        }
+        return nuevaFlota;
+    }
     
 }
