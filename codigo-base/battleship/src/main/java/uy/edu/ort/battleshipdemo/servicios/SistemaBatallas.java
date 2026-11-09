@@ -2,6 +2,7 @@ package uy.edu.ort.battleshipdemo.servicios;
 import uy.edu.ort.battleshipdemo.Modelo.Batalla;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 
 public class SistemaBatallas {
@@ -17,6 +18,18 @@ public class SistemaBatallas {
     }
     private SistemaBatallas() {
         this.batallas = new ArrayList<>();
+    }
+
+    //Nati, letra dice que hay que generar nombre al azar
+    private String generarLugar(){
+        String letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        Random azar = new Random(); //averigue como generar algo random y es asi.
+        String nombreDelLugar = "";
+        //le pregunté a la IA como generar un nombre al azar.
+        for(int i = 0; i<=6; i++){
+            azar.nextInt(letras.length());
+        }
+        return "";
     }
 
     public void agregarBatalla(Batalla batalla) throws BatallaException {
