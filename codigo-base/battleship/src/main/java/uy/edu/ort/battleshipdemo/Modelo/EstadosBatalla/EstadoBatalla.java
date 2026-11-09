@@ -14,21 +14,30 @@ public abstract class EstadoBatalla {
         this.nombre = nombre;
     }
 
-    public Batalla.Estados getEstado() { return estado; }
-    public String getNombre() { return nombre; }
+    public Batalla.Estados getEstado() {
+        return estado;
+    }
 
-    // Con nati vimos que las clases hijas deben decidir qué operaciones permiten y qué errores
+    public String getNombre() {
+        return nombre;
+    }
+
+    // Con nati vimos que las clases hijas deben decidir qué operaciones permiten y
+    // qué errores
     // producen. Cada transición devuelve el estado que Batalla debe conservar.
     public EstadoBatalla enCombate() throws BatallaException {
-       
+        throw new BatallaException("Transición a combate todavía no implementada.");
     }
+
     public EstadoBatalla enPreparacion() throws BatallaException {
-
+        throw new BatallaException("Transición a combate todavía no implementada.");
     }
+
     public EstadoBatalla ganada() throws BatallaException {
-
+        throw new BatallaException("Transición a combate todavía no implementada.");
     }
+
     public EstadoBatalla perdida() throws BatallaException {
-        
+        throw new BatallaException("Transición a combate todavía no implementada.");
     }
 }

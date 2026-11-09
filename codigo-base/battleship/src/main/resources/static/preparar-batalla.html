@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preparar una nueva batalla</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #183047;
+            background: #f3f6f9;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px;
+            border: 1px solid #d5dfe8;
+            border-radius: 12px;
+            background: white;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+            font-size: clamp(1.6rem, 4vw, 2.1rem);
+            line-height: 1.2;
+        }
+
+        p {
+            line-height: 1.6;
+            color: #445d73;
+        }
+
+        .tabla-contenedor {
+            overflow-x: auto;
+            margin-top: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        caption {
+            margin-bottom: 12px;
+            text-align: left;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        th, td {
+            padding: 16px;
+            border-bottom: 1px solid #d5dfe8;
+        }
+
+        th { background: #edf3f8; }
+
+        input[type="number"] {
+            width: 90px;
+            max-width: 100%;
+            padding: 10px;
+            border: 1px solid #8a9eaf;
+            border-radius: 4px;
+            font: inherit;
+        }
+
+        input:focus-visible {
+            outline: 3px solid #1b6398;
+            outline-offset: 2px;
+        }
+
+        .campo-lugar { display: grid; gap: 8px; margin-bottom: 20px; }
+        .campo-lugar input { width: 100%; max-width: 420px; padding: 10px;
+            border: 1px solid #8a9eaf; border-radius: 4px; font: inherit; }
+        .campo-lugar small { color: #445d73; }
+        .dimensiones { display: flex; flex-wrap: wrap; gap: 20px; }
+        .dimensiones label { display: grid; gap: 8px; }
+        button { padding: 12px 18px; margin-top: 20px; border: 0;
+            border-radius: 4px; background: #1b6398; color: white;
+            font: inherit; cursor: pointer; }
+        button:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        #seccionBarcosPreparacion { margin-top: 32px; padding-top: 16px;
+            border-top: 1px solid #d5dfe8; }
+        #estadoBarcosPreparacion[data-error="true"] { color: #a51f2d; }
+        #resultadoValidacion[data-error="true"] { color: #a51f2d; }
+        #estadoCatalogo { margin-bottom: 0; }
+        #estadoCatalogo[data-error="true"] { color: #a51f2d; }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 12px; }
+            main { padding: 20px 16px; }
+            th, td { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Preparar una nueva batalla</h1>
+        <p>Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
+
+        <form id="formularioFlota" novalidate>
+        <div class="campo-lugar">
+            <label for="lugarBatalla">Lugar de la batalla (opcional)</label>
+            <input id="lugarBatalla" name="lugarBatalla" type="text" aria-describedby="ayudaLugar">
+            <small id="ayudaLugar">Si lo dejás vacío, se asignará un nombre de seis letras mayúsculas al crear la batalla.</small>
+        </div>
+        <div class="dimensiones">
+            <label for="filas">Filas (6 a 12)
+                <input id="filas" name="filas" type="number" value="6" min="6" max="12" step="1">
+            </label>
+            <label for="columnas">Columnas (6 a 12)
+                <input id="columnas" name="columnas" type="number" value="6" min="6" max="12" step="1">
+            </label>
+        </div>
+        <div class="tabla-contenedor">
+            <table>
+                <caption>Composición de la flota</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Tipo de barco</th>
+                        <th scope="col">Tamaño</th>
+                        <th scope="col">Cantidad</th>
+                    </tr>
+                </thead>
+                <!-- El presentador enviará los tipos; el manejador de la vista creará las filas. -->
+                <tbody id="tiposBarco"></tbody>
+            </table>
+        </div>
+        <p id="estadoCatalogo" role="status" aria-live="polite">Cargando tipos de barco...</p>
+        <button type="submit">Validar flota</button>
+        <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
+        <p id="resultadoValidacion" role="status" aria-live="polite"></p>
+        </form>
+        <section id="seccionBarcosPreparacion" aria-labelledby="tituloBarcosPreparacion" hidden>
+            <h2 id="tituloBarcosPreparacion">Ubicación de la flota</h2>
+            <div class="tabla-contenedor">
+                <table>
+                    <caption>Barcos de tu flota</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Barco</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Tamaño</th>
+                            <th scope="col">Ubicación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="barcosPreparacion"></tbody>
+                </table>
+            </div>
+            <p id="estadoBarcosPreparacion" role="status" aria-live="polite"></p>
+        </section>
+        <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
+    </main>
+
+    <script type="module">
+        import dispatcher from "./CommandDispatcher.js";
+
+        const cuerpoTabla = document.getElementById("tiposBarco");
+        const estadoCatalogo = document.getElementById("estadoCatalogo");
+
+        const formulario = document.getElementById("formularioFlota");
+        const resultado = document.getElementById("resultadoValidacion");
+        let enviandoValidacion = false;
+
+        function mostrarResultado(mensaje, esError = false) {
+            resultado.textContent = mensaje;
+            resultado.dataset.error = String(esError);
+        }
+
+        function mostrarEstado(mensaje, esError = false) {
+            estadoCatalogo.textContent = mensaje;
+            estadoCatalogo.dataset.error = String(esError);
+        }
+
+        const view = dispatcher.registerView("preparar-batalla", {
+            urlInicio: "/preparacion-batalla/vistaConectada",
+            onError: () => {
+                if (enviandoValidacion) {
+                    mostrarResultado("No se pudo validar la flota. Revisá los valores ingresados e intentá nuevamente.", true);
+                } else {
+                    mostrarEstado("No se pudieron cargar los tipos de barco. Intentá nuevamente más tarde.", true);
+                }
+            },
+            onException: (mensaje) => mostrarResultado(mensaje, true)
+        });
+
+        function crearFila(tipo, indice, cantidad) {
+            const fila = document.createElement("tr");
+            const nombre = document.createElement("td");
+            const tamanio = document.createElement("td");
+            const celdaCantidad = document.createElement("td");
+            const entrada = document.createElement("input");
+
+            nombre.textContent = tipo.nombre;
+            tamanio.textContent = tipo.tamanio;
+            entrada.type = "number";
+            entrada.id = "cantidad-" + indice;
+            entrada.name = "cantidad-" + indice;
+            entrada.min = "0";
+            entrada.max = "6";
+            entrada.step = "1";
+            entrada.value = cantidad;
+            entrada.dataset.tipoBarco = tipo.nombre;
+            entrada.setAttribute("aria-label", "Cantidad de " + tipo.nombre);
+            celdaCantidad.appendChild(entrada);
+            fila.append(nombre, tamanio, celdaCantidad);
+            return fila;
+        }
+
+        // El servidor proporciona el catálogo. La vista solo lo representa:
+        // no valida ocupación, tamaños ni otras reglas del modelo.
+        view.handler("tiposBarco", (tipos) => {
+            if (!Array.isArray(tipos)) {
+                mostrarEstado("No se pudo mostrar el catálogo de barcos.", true);
+                return;
+            }
+
+            // Conservar las cantidades escritas si llega nuevamente el catálogo.
+            const cantidades = new Map();
+            cuerpoTabla.querySelectorAll("input").forEach((entrada) => {
+                cantidades.set(entrada.dataset.tipoBarco, entrada.value);
+            });
+            cuerpoTabla.replaceChildren();
+            tipos.forEach((tipo, indice) => {
+                cuerpoTabla.appendChild(crearFila(tipo, indice, cantidades.get(tipo.nombre) ?? "0"));
+            });
+            mostrarEstado(tipos.length === 0
+                ? "No hay tipos de barco disponibles."
+                : "Indicá la cantidad de barcos de cada tipo. Podés elegir de 0 a 6.");
+        });
+
+        // Representar los DTOs recibidos sin calcular ubicación ni modificar el modelo.
+        view.handler("barcosPreparacion", (barcos) => {
+            const seccion = document.getElementById("seccionBarcosPreparacion");
+            const cuerpo = document.getElementById("barcosPreparacion");
+            const estado = document.getElementById("estadoBarcosPreparacion");
+            seccion.hidden = false;
+            cuerpo.replaceChildren();
+            if (!Array.isArray(barcos)) {
+                estado.textContent = "No se pudo mostrar la lista de barcos.";
+                estado.dataset.error = "true";
+                return;
+            }
+            barcos.forEach((barco) => {
+                const fila = document.createElement("tr");
+                // Conservar el índice del servidor; el número visible empieza en uno.
+                fila.dataset.indice = String(barco.indice);
+                const valores = [
+                    Number(barco.indice) + 1,
+                    barco.nombreTipo,
+                    barco.tamaño,
+                    barco.barcoUbicado ? "Ubicado" : "Pendiente de ubicación"
+                ];
+                valores.forEach((valor) => {
+                    const celda = document.createElement("td");
+                    celda.textContent = String(valor);
+                    fila.appendChild(celda);
+                });
+                cuerpo.appendChild(fila);
+            });
+            estado.dataset.error = "false";
+            estado.textContent = barcos.length === 0
+                ? "No hay barcos en esta flota."
+                : "Estado de ubicación de los barcos de tu flota.";
+        });
+
+        view.handler("configuracionValidada", (mensaje) => {
+            mostrarResultado(mensaje);
+        });
+
+        formulario.addEventListener("input", () => mostrarResultado(""));
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const datos = {
+                lugarBatalla: document.getElementById("lugarBatalla").value,
+                filas: document.getElementById("filas").value,
+                columnas: document.getElementById("columnas").value
+            };
+            cuerpoTabla.querySelectorAll("input").forEach((entrada, indice) => {
+                datos[`cantidadesBarcos[${indice}].nombreTipo`] = entrada.dataset.tipoBarco;
+                datos[`cantidadesBarcos[${indice}].cantidad`] = entrada.value;
+            });
+            mostrarResultado("Validando flota...");
+            enviandoValidacion = true;
+            try {
+                await dispatcher.submit("/preparacion-batalla/prepararBatalla", datos);
+            } finally {
+                enviandoValidacion = false;
+            }
+        });
+
+        // Iniciar después de registrar el manejador, para recibir la primera respuesta.
+        dispatcher.startView(view);
+    </script>
+</body>
+</html>

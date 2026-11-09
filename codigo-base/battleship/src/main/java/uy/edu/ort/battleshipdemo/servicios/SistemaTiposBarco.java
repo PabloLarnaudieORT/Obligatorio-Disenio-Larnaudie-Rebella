@@ -29,4 +29,13 @@ public class SistemaTiposBarco {
     public List<TipoBarco> getTiposBarco() {
         return tiposBarco;
     }
+
+    public TipoBarco buscarTipoBarco(String nombreTipoBarco){
+        for(TipoBarco tipoBarco : tiposBarco){
+            if(tipoBarco.getNombre().equals(nombreTipoBarco)){
+                return tipoBarco;
+            }
+        }
+        return null;
+    }
 }

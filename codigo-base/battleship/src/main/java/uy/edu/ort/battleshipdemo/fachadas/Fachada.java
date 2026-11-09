@@ -40,4 +40,8 @@ public class Fachada {
         return sistemaBatallas.buscarBatalla(nombreLugar);
     }
 
+    public TipoBarco buscarTipoBarco(String nombreDelTipoBarco){
+        return sistemaTiposBarco.buscarTipoBarco(nombreDelTipoBarco);
+    }
+
 }

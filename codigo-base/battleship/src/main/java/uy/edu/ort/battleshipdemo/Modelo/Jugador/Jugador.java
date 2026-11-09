@@ -19,10 +19,11 @@ public abstract class Jugador {
     }
 
     public int partesSanas() {
-        // Armamos la base de jugador con nati, tenemos esta base para discutir pero la idea seria NO CALCULAR ACA, delegar a Oceano en Flota
+        
+        return oceano.partesSanas();
     }
 
     public int tamanioFlota() {
-        // Aca es lo mismo, tenemos esta base para discutir pero la idea seria NO CALCULAR ACA, delegar a Oceano en Flota para obtener el tamaño total.
+        return oceano.tamañoTotalDeLaFlota();
     }
 }
