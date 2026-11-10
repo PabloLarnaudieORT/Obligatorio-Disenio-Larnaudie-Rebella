@@ -43,8 +43,15 @@ public class PresentadorSala {
                 BatallaSalaDto.listaDtos(fachada.getBatallas()));
     }
 
-    @PostMapping ("/vistaConectada")
-    public Commands vistaConectada(){
-        return Commands.create(batallas());
+    @PostMapping("/vistaConectada")
+    public Commands vistaConectada() {
+        int ganadas = fachada.contarBatallasPorEstado(Batalla.Estados.ganada);
+        int perdidas = fachada.contarBatallasPorEstado(Batalla.Estados.perdida);
+        double porcentajeExito = fachada.calcularPorcentajeExito();
+        return Commands.create(
+                batallas(),
+                new Command("batallasGanadas", ganadas),
+                new Command("batallasPerdidas", perdidas),
+                new Command("porcentajeExito", porcentajeExito));
     }
 }

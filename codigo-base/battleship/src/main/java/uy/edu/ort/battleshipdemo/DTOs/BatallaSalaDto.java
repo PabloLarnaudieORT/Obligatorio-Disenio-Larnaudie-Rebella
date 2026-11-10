@@ -12,7 +12,11 @@ public class BatallaSalaDto {
     private int tamañoFlotaPropia;
     private int partesSanasEnemigas;
     private int tamañoFlotaEnemiga;
+    private String estado;
 
+    public String getEstado(){
+        return estado;
+    }
     public int getPartesSanasPropias() {
         return partesSanasPropias;
     }
@@ -61,6 +65,7 @@ public class BatallaSalaDto {
         tamañoFlotaPropia = batalla.getJugadorHumano().tamanioFlota();
         partesSanasEnemigas =  batalla.getJugadorMaquina().partesSanas();
         tamañoFlotaEnemiga = batalla.getJugadorMaquina().tamanioFlota();
+        estado = batalla.getEstado().getNombre();
     }
 
     public BatallaSalaDto(String lugar, int fila, int columna) {

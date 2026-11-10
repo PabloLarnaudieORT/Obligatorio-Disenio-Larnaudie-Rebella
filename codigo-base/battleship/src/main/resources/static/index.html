@@ -48,6 +48,7 @@
                     <tr>
                         <th scope="col">Lugar</th>
                         <th scope="col">Dimensiones (ancho × alto)</th>
+                        <th scope="col">Estado</th>
                         <th scope="col">Integridad propia</th>
                         <th scope="col">Integridad enemiga</th>
                         <th scope="col">Acceso</th>
@@ -87,6 +88,7 @@
                 [
                     batalla.lugar,
                     batalla.columna + " × " + batalla.fila,
+                    batalla.estado,
                     batalla.partesSanasPropias + " / " + batalla.tamañoFlotaPropia,
                     batalla.partesSanasEnemigas + " / " + batalla.tamañoFlotaEnemiga
                 ].forEach((dato) => {

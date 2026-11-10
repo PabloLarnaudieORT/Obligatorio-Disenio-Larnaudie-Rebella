@@ -48,4 +48,12 @@ public class Fachada {
         sistemaBatallas.ubicarBarco(lugarBatalla, indiceBarco, fila, columna, horizontal);
     }
 
+    public int contarBatallasPorEstado(Batalla.Estados estadoBuscado){
+        return sistemaBatallas.contarBatallasPorEstado(estadoBuscado);
+    }
+
+    public double calcularPorcentajeExito(){
+        return sistemaBatallas.calcularPorcentajeExito();
+    }
+
 }
