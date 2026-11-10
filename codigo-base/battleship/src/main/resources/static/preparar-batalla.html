@@ -115,11 +115,11 @@
 </head>
 <body>
     <main>
-        <h1>Preparar una nueva batalla</h1>
+        <h1 id="tituloPreparacion">Preparar una nueva batalla</h1>
         <nav aria-label="Navegación de preparación">
             <a class="volver-sala" href="/">Volver a la sala de operaciones</a>
         </nav>
-        <p>Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
+        <p id="descripcionConfiguracion">Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
 
         <form id="formularioFlota" novalidate>
         <div class="campo-lugar">
@@ -154,7 +154,7 @@
         <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
         <p id="resultadoValidacion" role="status" aria-live="polite"></p>
         </form>
-        <section class="abrir-preparacion" aria-labelledby="tituloAbrirPreparacion">
+        <section id="seccionAbrirPreparacion" class="abrir-preparacion" aria-labelledby="tituloAbrirPreparacion">
             <h2 id="tituloAbrirPreparacion">Continuar una preparación</h2>
             <p>Ingresá el lugar de una batalla existente para ver y ubicar sus barcos.</p>
             <form id="formularioAbrirPreparacion" novalidate>
@@ -297,6 +297,12 @@
 
         // El lugar definitivo debe provenir del servidor, incluso cuando fue generado.
         view.handler("lugarBatalla", (lugar) => {
+            // El servidor confirmó la apertura: pasar de configuración a despliegue.
+            document.getElementById("tituloPreparacion").textContent = "Desplegando la Flota";
+            document.title = "Desplegando la Flota";
+            document.getElementById("descripcionConfiguracion").hidden = true;
+            formulario.hidden = true;
+            document.getElementById("seccionAbrirPreparacion").hidden = true;
             if (lugar !== lugarDePreparacion) {
                 indiceSeleccionado = null;
                 document.getElementById("orientacionBarco").value = "true";
