@@ -75,7 +75,7 @@ public class PresentadorPrepararBatalla {
     private Command inicializarTablero(Oceano oceano) {
         int filas = oceano.getFilas();
         int columnas = oceano.getColumnas();
-        InicializarDto datosDelTablero = new InicializarDto(filas, columnas, "/preparacion-batalla/ubicarBarco", null);
+        InicializarDto datosDelTablero = new InicializarDto(filas, columnas, "/preparacion-batalla/ubicarBarco", "/preparacion-batalla/ubicarEnAguasEnemigas");
         return new Command("inicializar", datosDelTablero);
 
     }
@@ -156,6 +156,11 @@ public class PresentadorPrepararBatalla {
                 flota.estanTodosUbicados());
         comandos.add(estadoFlota);
         return comandos;
+    }
+
+    @PostMapping ("/ubicarEnAguasEnemigas")
+    public Commands ubicarEnAguasEnemigas() throws BatallaException{
+        throw new BatallaException("No puede ubicar barcos en aguas enemigas");
     }
 
 }
