@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sala de operaciones</title>
+    <style>
+        :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif;
+            color: #183047; background: #f3f6f9; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 40px 20px; }
+        main { max-width: 900px; margin: auto; padding: 32px; background: white;
+            border: 1px solid #d5dfe8; border-radius: 12px; }
+        h1 { margin: 0 0 16px; font-size: clamp(1.6rem, 4vw, 2.1rem); }
+        p { line-height: 1.6; color: #445d73; }
+        .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 24px 0; }
+        button { border: 0; border-radius: 4px; padding: 12px 18px; font: inherit;
+            color: white; background: #1b6398; cursor: pointer; }
+        a { color: #1b6398; text-underline-offset: 3px; }
+        button:focus-visible, a:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        .tabla-contenedor { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        caption { margin-bottom: 12px; text-align: left; font-size: 1.1rem; font-weight: bold; }
+        th, td { padding: 16px; border-bottom: 1px solid #d5dfe8; }
+        th { background: #edf3f8; }
+        td:first-child { overflow-wrap: anywhere; }
+        #estadoSala[data-error="true"] { color: #a51f2d; }
+        @media (max-width: 600px) {
+            body { padding: 20px 12px; }
+            main { padding: 20px 16px; }
+            th, td { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Sala de operaciones</h1>
+        <p>Consultá los lugares y las dimensiones de las batallas registradas.</p>
+        <nav class="acciones" aria-label="Acciones de la sala">
+            <button id="actualizarBatallas" type="button">Actualizar listado</button>
+            <a href="/preparar-batalla.html">Ir a preparación</a>
+        </nav>
+        <div class="tabla-contenedor">
+            <table>
+                <caption>Batallas registradas</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Lugar</th>
+                        <th scope="col">Filas</th>
+                        <th scope="col">Columnas</th>
+                    </tr>
+                </thead>
+                <tbody id="batallas"></tbody>
+            </table>
+        </div>
+        <p id="estadoSala" role="status" aria-live="polite">Cargando batallas...</p>
+        <noscript><p>Activá JavaScript para consultar las batallas.</p></noscript>
+    </main>
+    <script type="module">
+        import dispatcher from "./CommandDispatcher.js";
+
+        const cuerpo = document.getElementById("batallas");
+        const estado = document.getElementById("estadoSala");
+
+        function mostrarEstado(mensaje, esError = false) {
+            estado.textContent = mensaje;
+            estado.dataset.error = String(esError);
+        }
+
+        const view = dispatcher.registerView("sala", {
+            urlInicio: "/sala/vistaConectada",
+            onError: () => mostrarEstado("No se pudo actualizar el listado. Intentá nuevamente.", true),
+            onException: (mensaje) => mostrarEstado(mensaje, true)
+        });
+
+        view.handler("batallas", (batallas) => {
+            if (!Array.isArray(batallas)) {
+                mostrarEstado("No se pudo mostrar el listado de batallas.", true);
+                return;
+            }
+            cuerpo.replaceChildren();
+            batallas.forEach((batalla) => {
+                const fila = document.createElement("tr");
+                [batalla.lugar, batalla.fila, batalla.columna].forEach((dato) => {
+                    const celda = document.createElement("td");
+                    celda.textContent = String(dato);
+                    fila.appendChild(celda);
+                });
+                cuerpo.appendChild(fila);
+            });
+            mostrarEstado(batallas.length === 0
+                ? "No hay batallas registradas."
+                : "Listado actualizado.");
+        });
+
+        document.getElementById("actualizarBatallas").addEventListener("click", () => {
+            mostrarEstado("Actualizando batallas...");
+            dispatcher.submit("/sala/vistaConectada");
+        });
+
+        dispatcher.startView(view);
+    </script>
+</body>
+</html>
