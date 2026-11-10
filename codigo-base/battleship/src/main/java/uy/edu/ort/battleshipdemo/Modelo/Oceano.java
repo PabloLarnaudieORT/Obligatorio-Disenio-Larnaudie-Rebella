@@ -134,7 +134,7 @@ public class Oceano {
             barco.agregarCeldaOcupada(celda);
         }
     }
-
+    
     public Disparo recibirDisparo(int fila, int columna) throws BatallaException {
         // Nati, aca si una coordenada fila o columna esta fuera del rango, ya hay un
         // error.

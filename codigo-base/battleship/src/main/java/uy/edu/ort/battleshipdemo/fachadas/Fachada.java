@@ -44,4 +44,8 @@ public class Fachada {
         return sistemaTiposBarco.buscarTipoBarco(nombreDelTipoBarco);
     }
 
+    public void ubicarBarco(String lugarBatalla, int indiceBarco, int fila, int columna, boolean horizontal)throws BatallaException{
+        sistemaBatallas.ubicarBarco(lugarBatalla, indiceBarco, fila, columna, horizontal);
+    }
+
 }
