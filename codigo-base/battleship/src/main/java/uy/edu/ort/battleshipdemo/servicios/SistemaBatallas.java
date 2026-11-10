@@ -48,13 +48,14 @@ public class SistemaBatallas {
             throw new BatallaException("La batalla no puede ser nula");
         }
         String nombreLugar = batalla.getLugar();
-        if (nombreLugar == null || nombreLugar.isEmpty()) {
+        //Probando, me di cuenta que faltaba un trim()
+        if (nombreLugar == null || nombreLugar.trim().isEmpty()) {
             // debido a que no puede ser vacio el nombre, vamos a poner generarLugar
             nombreLugar = generarLugar();
             batalla.setLugar(nombreLugar);
         }
         if (buscarBatalla(nombreLugar) != null) {
-            throw new BatallaException("Ya existe una batalla en el lugar: " + nombreLugar);
+            throw new BatallaException( "No se puede librar más de una batalla en el mismo lugar, cambie de nombre");
         }
         this.batallas.add(batalla);
     }

@@ -332,6 +332,90 @@ public class DatosPrueba {
                 System.out.println("--- Fin de la comprobación de creación de océanos ---");
         }
 
+        // Comprobaciones manuales generadas con ayuda de IA; no se invocan al arrancar.
+        // Retira únicamente sus propios ejemplos al finalizar, sin vaciar el registro.
+        public static void probarLugaresBatalla() throws TipoBarcoException, BatallaException {
+                Fachada fachada = Fachada.getInstancia();
+                List<Batalla> ejemplos = new ArrayList<>();
+                List<String> lugaresOmitidos = new ArrayList<>();
+                lugaresOmitidos.add(null);
+                lugaresOmitidos.add("");
+                lugaresOmitidos.add("   ");
+                List<String> generados = new ArrayList<>();
+                System.out.println("--- Comprobación de lugares de batalla ---");
+                try {
+                        int numeroCaso = 0;
+                        for (String omitido : lugaresOmitidos) {
+                                numeroCaso++;
+                                Batalla batalla = crearBatallaParaComprobarLugar(omitido);
+                                ejemplos.add(batalla);
+                                fachada.agregarBatalla(batalla);
+                                String generado = batalla.getLugar();
+                                boolean formatoCorrecto = generado != null && generado.length() == 6;
+                                if (formatoCorrecto) {
+                                        for (int i = 0; i < generado.length(); i++) {
+                                                if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(generado.charAt(i)) < 0) formatoCorrecto = false;
+                                        }
+                                }
+                                System.out.println((formatoCorrecto ? "OK" : "ERROR")
+                                                + " | Lugar omitido, caso " + numeroCaso + ": seis letras mayúsculas.");
+                                generados.add(generado);
+                        }
+                        boolean distintos = true;
+                        for (int i = 0; i < generados.size(); i++) {
+                                for (int j = i + 1; j < generados.size(); j++) {
+                                        if (generados.get(i).equals(generados.get(j))) distintos = false;
+                                }
+                        }
+                        System.out.println((distintos ? "OK" : "ERROR") + " | Los nombres generados registrados son distintos.");
+
+                        String elegido = "Lugar de comprobación";
+                        while (fachada.buscarBatalla(elegido) != null) elegido += "X";
+                        Batalla original = crearBatallaParaComprobarLugar(elegido);
+                        ejemplos.add(original);
+                        fachada.agregarBatalla(original);
+                        boolean conservado = elegido.equals(original.getLugar())
+                                        && fachada.buscarBatalla(elegido) == original;
+                        System.out.println((conservado ? "OK" : "ERROR") + " | Se conserva el nombre ingresado.");
+
+                        int cantidadAntes = fachada.getBatallas().size();
+                        Batalla repetida = crearBatallaParaComprobarLugar(elegido);
+                        ejemplos.add(repetida);
+                        boolean mensajeCorrecto = false;
+                        try {
+                                fachada.agregarBatalla(repetida);
+                        } catch (BatallaException error) {
+                                mensajeCorrecto = "No se puede librar más de una batalla en el mismo lugar, cambie de nombre"
+                                                .equals(error.getMessage());
+                        }
+                        System.out.println((mensajeCorrecto ? "OK" : "ERROR") + " | Lugar duplicado rechazado con el mensaje de la letra.");
+                        boolean registroIntacto = fachada.getBatallas().size() == cantidadAntes
+                                        && !fachada.getBatallas().contains(repetida)
+                                        && fachada.buscarBatalla(elegido) == original;
+                        System.out.println((registroIntacto ? "OK" : "ERROR") + " | La batalla rechazada no se agrega y se conserva la original.");
+                } finally {
+                        for (Batalla ejemplo : ejemplos) fachada.getBatallas().remove(ejemplo);
+                }
+                System.out.println("--- Fin de la comprobación de lugares ---");
+        }
+
+        private static Batalla crearBatallaParaComprobarLugar(String lugar) throws TipoBarcoException, BatallaException {
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(new TipoBarco("Acorazado", 4), 1));
+                detalles.add(new DetalleFlota(new TipoBarco("Submarino", 2), 1));
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 8, detalles);
+                JugadorHumano humano = new JugadorHumano("Humano de ejemplo");
+                humano.setOceano(configuracion.crearOceano());
+                JugadorMaquina maquina = new JugadorMaquina("Máquina de ejemplo", new TacticaSecuencial());
+                maquina.setOceano(configuracion.crearOceano());
+                Batalla batalla = new Batalla();
+                batalla.setLugar(lugar);
+                batalla.setConfiguracion(configuracion);
+                batalla.setJugadorHumano(humano);
+                batalla.setJugadorMaquina(maquina);
+                return batalla;
+        }
+
         private static ConfiguracionBatalla crearConfiguracion(int filas, int columnas, List<DetalleFlota> detalles) {
 
                 ConfiguracionBatalla configuracion = new ConfiguracionBatalla();
