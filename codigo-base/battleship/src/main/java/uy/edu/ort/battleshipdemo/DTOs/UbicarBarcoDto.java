@@ -47,7 +47,7 @@ public class UbicarBarcoDto {
     }
 
 
-    public boolean isEsHorizontal() {
+    public boolean getEsHorizontal() {
         return esHorizontal;
     }
 

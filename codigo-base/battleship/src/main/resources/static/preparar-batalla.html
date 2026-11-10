@@ -88,6 +88,10 @@
             border-radius: 4px; background: #1b6398; color: white;
             font: inherit; cursor: pointer; }
         button:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        .controles-ubicacion { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+        .controles-ubicacion select { padding: 10px; font: inherit; }
+        #tableroPreparacion { margin-top: 20px; min-width: 0; }
+        #resultadoUbicacion[data-error="true"] { color: #a51f2d; }
         #seccionBarcosPreparacion { margin-top: 32px; padding-top: 16px;
             border-top: 1px solid #d5dfe8; }
         #estadoBarcosPreparacion[data-error="true"] { color: #a51f2d; }
@@ -142,6 +146,16 @@
         </form>
         <section id="seccionBarcosPreparacion" aria-labelledby="tituloBarcosPreparacion" hidden>
             <h2 id="tituloBarcosPreparacion">Ubicación de la flota</h2>
+            <p>Lugar: <strong id="lugarPreparacion"></strong></p>
+            <div class="controles-ubicacion">
+                <label for="orientacionBarco">Orientación
+                    <select id="orientacionBarco">
+                        <option value="true" selected>Horizontal</option>
+                        <option value="false">Vertical</option>
+                    </select>
+                </label>
+            </div>
+            <p>Seleccioná un barco y hacé clic en la celda inicial de Aguas propias.</p>
             <div class="tabla-contenedor">
                 <table>
                     <caption>Barcos de tu flota</caption>
@@ -157,12 +171,15 @@
                 </table>
             </div>
             <p id="estadoBarcosPreparacion" role="status" aria-live="polite"></p>
+            <p id="resultadoUbicacion" role="status" aria-live="polite"></p>
+            <div id="tableroPreparacion"></div>
         </section>
         <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
     </main>
 
     <script type="module">
         import dispatcher from "./CommandDispatcher.js";
+        import BattleShipBoard from "./BattleShipBoard.js";
 
         const cuerpoTabla = document.getElementById("tiposBarco");
         const estadoCatalogo = document.getElementById("estadoCatalogo");
@@ -170,6 +187,15 @@
         const formulario = document.getElementById("formularioFlota");
         const resultado = document.getElementById("resultadoValidacion");
         let enviandoValidacion = false;
+        let ubicacionesEnCurso = 0;
+        let lugarDePreparacion = "";
+        let indiceSeleccionado = null;
+
+        function mostrarUbicacion(mensaje, esError = false) {
+            const salida = document.getElementById("resultadoUbicacion");
+            salida.textContent = mensaje;
+            salida.dataset.error = String(esError);
+        }
 
         function mostrarResultado(mensaje, esError = false) {
             resultado.textContent = mensaje;
@@ -184,14 +210,51 @@
         const view = dispatcher.registerView("preparar-batalla", {
             urlInicio: "/preparacion-batalla/vistaConectada",
             onError: () => {
-                if (enviandoValidacion) {
+                if (ubicacionesEnCurso > 0) {
+                    mostrarUbicacion("No se pudo ubicar el barco. Revisá la selección y la posición elegida.", true);
+                } else if (enviandoValidacion) {
                     mostrarResultado("No se pudo validar la flota. Revisá los valores ingresados e intentá nuevamente.", true);
                 } else {
                     mostrarEstado("No se pudieron cargar los tipos de barco. Intentá nuevamente más tarde.", true);
                 }
             },
-            onException: (mensaje) => mostrarResultado(mensaje, true)
+            onException: (mensaje) => {
+                if (ubicacionesEnCurso > 0) mostrarUbicacion(mensaje, true);
+                else mostrarResultado(mensaje, true);
+            }
         });
+
+        // Adaptación de datos de la vista. El tablero y el dispatcher originales no se modifican.
+        const dispatcherTablero = {
+            mapFunctions: (...argumentos) => dispatcher.mapFunctions(...argumentos),
+            submit: async (url, coordenadas) => {
+                ubicacionesEnCurso++;
+                mostrarUbicacion("Ubicando barco...");
+                try {
+                    return await dispatcher.submit(url, {
+                        lugarDeLaBatalla: lugarDePreparacion,
+                        indiceDelBarco: indiceSeleccionado ?? -1,
+                        fila: coordenadas.coordenadaVertical,
+                        columna: coordenadas.coordenadaHorizontal,
+                        esHorizontal: document.getElementById("orientacionBarco").value
+                    });
+                } finally {
+                    ubicacionesEnCurso--;
+                }
+            }
+        };
+        const tablero = new BattleShipBoard(
+            document.getElementById("tableroPreparacion"),
+            dispatcherTablero,
+            { anchoMaximo: 760, altoMaximo: 760, tamanoFuente: 12, tamanoIcono: 22 }
+        );
+
+        // El lugar definitivo debe provenir del servidor, incluso cuando fue generado.
+        view.handler("lugarBatalla", (lugar) => {
+            lugarDePreparacion = lugar;
+            document.getElementById("lugarPreparacion").textContent = lugar;
+        });
+        view.handler("barcoUbicado", (mensaje) => mostrarUbicacion(mensaje));
 
         function crearFila(tipo, indice, cantidad) {
             const fila = document.createElement("tr");
@@ -250,7 +313,12 @@
                 estado.dataset.error = "true";
                 return;
             }
-            barcos.forEach((barco) => {
+            // Orden visual por tamaño, conservando siempre los índices del servidor.
+            const ordenados = barcos.slice().sort((a, b) => b.tamaño - a.tamaño || a.indice - b.indice);
+            if (!ordenados.some((barco) => barco.indice === indiceSeleccionado)) {
+                indiceSeleccionado = ordenados.length > 0 ? ordenados[0].indice : null;
+            }
+            ordenados.forEach((barco) => {
                 const fila = document.createElement("tr");
                 // Conservar el índice del servidor; el número visible empieza en uno.
                 fila.dataset.indice = String(barco.indice);
@@ -260,9 +328,25 @@
                     barco.tamaño,
                     barco.barcoUbicado ? "Ubicado" : "Pendiente de ubicación"
                 ];
-                valores.forEach((valor) => {
+                valores.forEach((valor, columna) => {
                     const celda = document.createElement("td");
-                    celda.textContent = String(valor);
+                    if (columna === 0) {
+                        const etiqueta = document.createElement("label");
+                        const opcion = document.createElement("input");
+                        opcion.type = "radio";
+                        opcion.name = "barcoSeleccionado";
+                        opcion.value = String(barco.indice);
+                        opcion.checked = barco.indice === indiceSeleccionado;
+                        opcion.setAttribute("aria-label", "Seleccionar barco " + valor + ": " + barco.nombreTipo);
+                        opcion.addEventListener("change", () => {
+                            indiceSeleccionado = barco.indice;
+                            mostrarUbicacion("");
+                        });
+                        etiqueta.append(opcion, document.createTextNode(" " + valor));
+                        celda.appendChild(etiqueta);
+                    } else {
+                        celda.textContent = String(valor);
+                    }
                     fila.appendChild(celda);
                 });
                 cuerpo.appendChild(fila);

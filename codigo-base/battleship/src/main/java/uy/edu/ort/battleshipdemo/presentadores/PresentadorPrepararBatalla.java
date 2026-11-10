@@ -14,11 +14,13 @@ import uy.edu.ort.battleshipdemo.DTOs.TipoBarcoDto;
 import uy.edu.ort.battleshipdemo.DTOs.PrepararBatallaDto;
 import uy.edu.ort.battleshipdemo.DTOs.CantidadBarcoDto;
 import uy.edu.ort.battleshipdemo.DTOs.BarcoPreparacionDto;
+import uy.edu.ort.battleshipdemo.DTOs.UbicarBarcoDto;
 import uy.edu.ort.battleshipdemo.fachadas.Fachada;
 import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
 import uy.edu.ort.battleshipdemo.Modelo.DetalleFlota;
 import uy.edu.ort.battleshipdemo.Modelo.Flota;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
+import uy.edu.ort.battleshipdemo.Modelo.Batalla;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 
 @RestController
@@ -70,8 +72,17 @@ public class PresentadorPrepararBatalla {
     }
 
     @PostMapping("/prepararBatalla")
-    public Commands prepararBatalla(PrepararBatallaDto datos) throws BatallaException {
-        ConfiguracionBatalla configuracionBatalla = crearConfiguracion(datos);
+    public Commands prepararBatalla(PrepararBatallaDto prepararBatallaDto) throws BatallaException {
+        ConfiguracionBatalla configuracionBatalla = crearConfiguracion(prepararBatallaDto);
         return Commands.create(new Command("configuracionValidada", "La configuracion de la flota es valida"));
+    }
+
+    @PostMapping("/ubicarBarco")
+    public Commands ubicarBarco(UbicarBarcoDto ubicarBarcoDto) throws BatallaException {
+        fachada.ubicarBarco(ubicarBarcoDto.getLugarDeLaBatalla(), ubicarBarcoDto.getIndiceDelBarco(),
+                ubicarBarcoDto.getFila(), ubicarBarcoDto.getColumna(), ubicarBarcoDto.getEsHorizontal());
+        Batalla batalla = fachada.buscarBatalla(ubicarBarcoDto.getLugarDeLaBatalla());
+        Flota flotaHumana = batalla.getJugadorHumano().getOceano().getFlota();
+        return Commands.create(new Command("barcoUbicado", "Barco Ubicado correctamente"), barcosPreparacion(flotaHumana));
     }
 }
