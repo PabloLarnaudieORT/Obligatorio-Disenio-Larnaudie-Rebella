@@ -1,6 +1,10 @@
 package uy.edu.ort.battleshipdemo.utilidades;
 
 import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
+import uy.edu.ort.battleshipdemo.Modelo.Batalla;
+import uy.edu.ort.battleshipdemo.Modelo.Jugador.JugadorHumano;
+import uy.edu.ort.battleshipdemo.Modelo.Jugador.JugadorMaquina;
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.TacticaSecuencial;
 import uy.edu.ort.battleshipdemo.Modelo.Barco;
 import uy.edu.ort.battleshipdemo.Modelo.Celda;
 import uy.edu.ort.battleshipdemo.Modelo.Flota;
@@ -32,6 +36,39 @@ public class DatosPrueba {
                 fachada.agregarTipoBarco(new TipoBarco("Crucero", 3));
                 fachada.agregarTipoBarco(new TipoBarco("Submarino", 2));
                 fachada.agregarTipoBarco(new TipoBarco("Destructor", 1));
+        }
+
+        // Precarga de ejemplo generada con ayuda de IA para comprobar la ubicación.
+        // Llamar después de cargarTiposBarco(). No inicia combate ni ejecuta la táctica.
+        public static void cargarBatallaPreparacion() throws BatallaException {
+                Fachada fachada = Fachada.getInstancia();
+                // Conservar una preparación existente, incluidas sus ubicaciones.
+                if (fachada.buscarBatalla("PRUEBA") != null) {
+                        return;
+                }
+                TipoBarco acorazado = fachada.buscarTipoBarco("Acorazado");
+                TipoBarco submarino = fachada.buscarTipoBarco("Submarino");
+                if (acorazado == null || submarino == null) {
+                        throw new BatallaException("Cargá los tipos de barco antes de la batalla de ejemplo.");
+                }
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(acorazado, 1));
+                detalles.add(new DetalleFlota(submarino, 1));
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 8, detalles);
+                configuracion.validar();
+
+                JugadorHumano humano = new JugadorHumano("Humano de prueba");
+                humano.setOceano(configuracion.crearOceano());
+                JugadorMaquina maquina = new JugadorMaquina("Máquina de prueba", new TacticaSecuencial());
+                maquina.setOceano(configuracion.crearOceano());
+
+                Batalla batalla = new Batalla();
+                batalla.setLugar("PRUEBA");
+                batalla.setConfiguracion(configuracion);
+                batalla.setJugadorHumano(humano);
+                batalla.setJugadorMaquina(maquina);
+                // El constructor de Batalla ya establece EstadoEnPreparacion.
+                fachada.agregarBatalla(batalla);
         }
 
         public static void probarConfiguracion() throws TipoBarcoException {
