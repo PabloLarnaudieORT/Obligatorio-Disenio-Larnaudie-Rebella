@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.context.annotation.Scope;
 import uy.edu.ort.battleshipdemo.Commands;
 import uy.edu.ort.battleshipdemo.Command;
+import uy.edu.ort.battleshipdemo.InicializarDto;
+import uy.edu.ort.battleshipdemo.ValorDto;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -20,7 +22,10 @@ import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
 import uy.edu.ort.battleshipdemo.Modelo.DetalleFlota;
 import uy.edu.ort.battleshipdemo.Modelo.Flota;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
+import uy.edu.ort.battleshipdemo.Modelo.Oceano;
 import uy.edu.ort.battleshipdemo.Modelo.Batalla;
+import uy.edu.ort.battleshipdemo.Modelo.Celda;
+import uy.edu.ort.battleshipdemo.Modelo.Barco;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 
 @RestController
@@ -67,8 +72,39 @@ public class PresentadorPrepararBatalla {
         return configuracion;
     }
 
+    private Command inicializarTablero(Oceano oceano) {
+        int filas = oceano.getFilas();
+        int columnas = oceano.getColumnas();
+        InicializarDto datosDelTablero = new InicializarDto(filas, columnas, "/preparacion-batalla/ubicarBarco", null);
+        return new Command("inicializar", datosDelTablero);
+
+    }
+
     private Command barcosPreparacion(Flota flota) {
         return new Command("barcosPreparacion", BarcoPreparacionDto.listaDtos(flota.getBarcos()));
+    }
+
+    // cada comando "mostrarAguasPropias indica fila y columna mostra el simbolo del
+    // barco"
+    // entonces precisamos commands para reunir todas las ordenes que precisa el
+    // barco
+    // el barco precisa 4 ordenes para 4 celdas.
+    private Commands mostrarBarcosUbicados(Flota flota) {
+        Commands comandos = Commands.create();
+        for (Barco barco : flota.getBarcos()) {
+            //Aca tengo que hacer 2 for... por que 
+            //no puedo aplicar esto dentro de barco y crear un command
+            //desde dentro del barco.
+            for (Celda celda : barco.getCeldas()) {
+                ValorDto valorDto = new ValorDto(
+                        celda.getFila(),
+                        celda.getColumna(),
+                        "barco");
+                Command comando = new Command("mostrarAguasPropias", valorDto);
+                comandos.add(comando);
+            }
+        }
+        return comandos;
     }
 
     @PostMapping("/prepararBatalla")
@@ -83,6 +119,10 @@ public class PresentadorPrepararBatalla {
                 ubicarBarcoDto.getFila(), ubicarBarcoDto.getColumna(), ubicarBarcoDto.getEsHorizontal());
         Batalla batalla = fachada.buscarBatalla(ubicarBarcoDto.getLugarDeLaBatalla());
         Flota flotaHumana = batalla.getJugadorHumano().getOceano().getFlota();
-        return Commands.create(new Command("barcoUbicado", "Barco Ubicado correctamente"), barcosPreparacion(flotaHumana));
+        Commands comandos = mostrarBarcosUbicados(flotaHumana);
+        comandos.add(new Command("barcoUbicado", "Barco ubicado!"));
+        comandos.add(barcosPreparacion(flotaHumana));
+        return comandos;
     }
+
 }
