@@ -38,7 +38,7 @@
         <p>Consultá las dimensiones y la integridad de las flotas de cada batalla.</p>
         <nav class="acciones" aria-label="Acciones de la sala">
             <button id="actualizarBatallas" type="button">Actualizar listado</button>
-            <a href="/preparar-batalla.html">Ir a preparación</a>
+            <a href="/preparar-batalla.html">Iniciar nueva batalla</a>
         </nav>
         <p>La integridad indica las partes sanas sobre el tamaño total de cada flota.</p>
         <div class="tabla-contenedor">
@@ -47,8 +47,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Lugar</th>
-                        <th scope="col">Filas</th>
-                        <th scope="col">Columnas</th>
+                        <th scope="col">Dimensiones (ancho × alto)</th>
                         <th scope="col">Integridad propia</th>
                         <th scope="col">Integridad enemiga</th>
                         <th scope="col">Acceso</th>
@@ -87,8 +86,7 @@
                 const fila = document.createElement("tr");
                 [
                     batalla.lugar,
-                    batalla.fila,
-                    batalla.columna,
+                    batalla.columna + " × " + batalla.fila,
                     batalla.partesSanasPropias + " / " + batalla.tamañoFlotaPropia,
                     batalla.partesSanasEnemigas + " / " + batalla.tamañoFlotaEnemiga
                 ].forEach((dato) => {
@@ -100,8 +98,8 @@
                 const enlace = document.createElement("a");
                 const parametros = new URLSearchParams({ lugarBatalla: batalla.lugar });
                 enlace.href = "/preparar-batalla.html?" + parametros.toString();
-                enlace.textContent = "Abrir preparación";
-                enlace.setAttribute("aria-label", "Abrir preparación de " + batalla.lugar);
+                enlace.textContent = "Entrar";
+                enlace.setAttribute("aria-label", "Entrar en la batalla de " + batalla.lugar);
                 celdaAcceso.appendChild(enlace);
                 fila.appendChild(celdaAcceso);
                 cuerpo.appendChild(fila);
