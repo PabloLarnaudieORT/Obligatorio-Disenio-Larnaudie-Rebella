@@ -40,7 +40,7 @@ public class PresentadorPrepararBatalla {
     }
 
     // fachada-getTiposBarco() obtiene los tipos del catalogo.
-    // TipoBarcoDto.listaDtos() convierte la lista de tipos de barco a una lista de
+    // TipoBarcoDto.listaDeBarcosPreparadosDtos() convierte la lista de tipos de barco a una lista de
     // DTOs.
     private Command tiposBarco() {
         return new Command(
@@ -81,7 +81,7 @@ public class PresentadorPrepararBatalla {
     }
 
     private Command barcosPreparacion(Flota flota) {
-        return new Command("barcosPreparacion", BarcoPreparacionDto.listaDtos(flota.getBarcos()));
+        return new Command("barcosPreparacion", BarcoPreparacionDto.listaDeBarcosPreparadosDtos(flota.getBarcos()));
     }
 
     // cada comando "mostrarAguasPropias indica fila y columna mostra el simbolo del
