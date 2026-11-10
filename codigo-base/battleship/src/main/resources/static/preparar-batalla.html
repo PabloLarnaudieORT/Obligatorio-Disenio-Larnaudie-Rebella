@@ -422,22 +422,31 @@
             }
         });
 
-        const formularioApertura = document.getElementById("formularioAbrirPreparacion");
-        formularioApertura.addEventListener("submit", async (evento) => {
-            evento.preventDefault();
+        async function abrirPreparacion(lugarBatalla) {
             mostrarApertura("Abriendo preparación...");
             aperturasEnCurso++;
             try {
-                await dispatcher.submit("/preparacion-batalla/abrirPreparacion", {
-                    lugarBatalla: document.getElementById("lugarBatallaExistente").value
-                });
+                await dispatcher.submit("/preparacion-batalla/abrirPreparacion", { lugarBatalla });
             } finally {
                 aperturasEnCurso--;
             }
+        }
+
+        const formularioApertura = document.getElementById("formularioAbrirPreparacion");
+        formularioApertura.addEventListener("submit", (evento) => {
+            evento.preventDefault();
+            return abrirPreparacion(document.getElementById("lugarBatallaExistente").value);
         });
 
         // Iniciar después de registrar el manejador, para recibir la primera respuesta.
         dispatcher.startView(view);
+
+        // Reutilizar la misma apertura cuando se llega desde una fila de la sala.
+        const lugarDesdeSala = new URLSearchParams(window.location.search).get("lugarBatalla");
+        if (lugarDesdeSala !== null) {
+            document.getElementById("lugarBatallaExistente").value = lugarDesdeSala;
+            abrirPreparacion(lugarDesdeSala);
+        }
     </script>
 </body>
 </html>

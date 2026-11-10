@@ -48,6 +48,7 @@
                         <th scope="col">Lugar</th>
                         <th scope="col">Filas</th>
                         <th scope="col">Columnas</th>
+                        <th scope="col">Acceso</th>
                     </tr>
                 </thead>
                 <tbody id="batallas"></tbody>
@@ -86,6 +87,14 @@
                     celda.textContent = String(dato);
                     fila.appendChild(celda);
                 });
+                const celdaAcceso = document.createElement("td");
+                const enlace = document.createElement("a");
+                const parametros = new URLSearchParams({ lugarBatalla: batalla.lugar });
+                enlace.href = "/preparar-batalla.html?" + parametros.toString();
+                enlace.textContent = "Abrir preparación";
+                enlace.setAttribute("aria-label", "Abrir preparación de " + batalla.lugar);
+                celdaAcceso.appendChild(enlace);
+                fila.appendChild(celdaAcceso);
                 cuerpo.appendChild(fila);
             });
             mostrarEstado(batallas.length === 0
