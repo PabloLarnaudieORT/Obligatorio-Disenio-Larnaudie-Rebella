@@ -35,11 +35,12 @@
 <body>
     <main>
         <h1>Sala de operaciones</h1>
-        <p>Consultá los lugares y las dimensiones de las batallas registradas.</p>
+        <p>Consultá las dimensiones y la integridad de las flotas de cada batalla.</p>
         <nav class="acciones" aria-label="Acciones de la sala">
             <button id="actualizarBatallas" type="button">Actualizar listado</button>
             <a href="/preparar-batalla.html">Ir a preparación</a>
         </nav>
+        <p>La integridad indica las partes sanas sobre el tamaño total de cada flota.</p>
         <div class="tabla-contenedor">
             <table>
                 <caption>Batallas registradas</caption>
@@ -48,6 +49,8 @@
                         <th scope="col">Lugar</th>
                         <th scope="col">Filas</th>
                         <th scope="col">Columnas</th>
+                        <th scope="col">Integridad propia</th>
+                        <th scope="col">Integridad enemiga</th>
                         <th scope="col">Acceso</th>
                     </tr>
                 </thead>
@@ -82,7 +85,13 @@
             cuerpo.replaceChildren();
             batallas.forEach((batalla) => {
                 const fila = document.createElement("tr");
-                [batalla.lugar, batalla.fila, batalla.columna].forEach((dato) => {
+                [
+                    batalla.lugar,
+                    batalla.fila,
+                    batalla.columna,
+                    batalla.partesSanasPropias + " / " + batalla.tamañoFlotaPropia,
+                    batalla.partesSanasEnemigas + " / " + batalla.tamañoFlotaEnemiga
+                ].forEach((dato) => {
                     const celda = document.createElement("td");
                     celda.textContent = String(dato);
                     fila.appendChild(celda);
