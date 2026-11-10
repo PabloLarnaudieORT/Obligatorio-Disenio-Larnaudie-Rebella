@@ -79,4 +79,16 @@ public class Flota {
         return barcos.get(indice);
     }
 
+    public boolean estanTodosUbicados(){
+        if(barcos.isEmpty()){
+            return false;
+        }
+        for(Barco barco: barcos){
+            if(!barco.estaUbicado()){
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

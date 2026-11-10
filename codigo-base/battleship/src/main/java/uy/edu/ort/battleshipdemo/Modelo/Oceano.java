@@ -197,4 +197,8 @@ public class Oceano {
         this.flota = flota;
     }
 
+    public boolean estanTodosUbicados(){
+        return flota.estanTodosUbicados();
+    }
+
 }

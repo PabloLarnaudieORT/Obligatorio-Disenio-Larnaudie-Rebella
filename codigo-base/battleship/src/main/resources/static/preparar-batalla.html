@@ -185,6 +185,7 @@
                 </table>
             </div>
             <p id="estadoBarcosPreparacion" role="status" aria-live="polite"></p>
+            <p id="estadoFlota" role="status" aria-live="polite"></p>
             <p id="resultadoUbicacion" role="status" aria-live="polite"></p>
             <div id="tableroPreparacion"></div>
         </section>
@@ -279,6 +280,7 @@
                 indiceSeleccionado = null;
                 document.getElementById("orientacionBarco").value = "true";
             }
+            document.getElementById("estadoFlota").textContent = "";
             lugarDePreparacion = lugar;
             document.getElementById("lugarPreparacion").textContent = lugar;
             document.getElementById("lugarBatallaExistente").value = lugar;
@@ -286,6 +288,13 @@
             mostrarApertura("Preparación abierta: " + lugar + ".");
         });
         view.handler("barcoUbicado", (mensaje) => mostrarUbicacion(mensaje));
+
+        // El modelo decide si la flota está ubicada; la vista solo muestra su respuesta.
+        view.handler("flotaUbicada", (completa) => {
+            document.getElementById("estadoFlota").textContent = completa === true
+                ? "Todos los barcos están ubicados."
+                : "Quedan barcos por ubicar.";
+        });
 
         function crearFila(tipo, indice, cantidad) {
             const fila = document.createElement("tr");

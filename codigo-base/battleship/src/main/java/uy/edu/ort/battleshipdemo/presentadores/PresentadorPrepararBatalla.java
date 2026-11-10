@@ -122,30 +122,39 @@ public class PresentadorPrepararBatalla {
         Commands comandos = mostrarBarcosUbicados(flotaHumana);
         comandos.add(new Command("barcoUbicado", "Barco ubicado!"));
         comandos.add(barcosPreparacion(flotaHumana));
+        Command estadoFlota = new Command(
+                "flotaUbicada",
+                flotaHumana.estanTodosUbicados());
+        comandos.add(estadoFlota);
         return comandos;
     }
 
     @PostMapping("/abrirPreparacion")
     public Commands abrirPreparacion(String lugarBatalla) throws BatallaException {
-        //primero buscamos la batalla
+        // primero buscamos la batalla
         Batalla batalla = fachada.buscarBatalla(lugarBatalla);
         if (batalla == null) {
             throw new BatallaException("La batalla no existe");
         }
-        //obtenemos la batalla del jugador humano.
+        // obtenemos la batalla del jugador humano.
         Oceano oceano = batalla.getJugadorHumano().getOceano();
-        //cuado tenemos el oceano, podemos acceder a la flota
+        // cuado tenemos el oceano, podemos acceder a la flota
         Flota flota = oceano.getFlota();
         Commands comandos = Commands.create();
-        //Ahora creamos comandos, para lugarBatalla.
+        // Ahora creamos comandos, para lugarBatalla.
         comandos.add(new Command("lugarBatalla", batalla.getLugar()));
         comandos.add(inicializarTablero(oceano));
         comandos.add(barcosPreparacion(flota));
-        Commands dibujarBarcos =  mostrarBarcosUbicados(flota);
-        //Aca incorporamos las ordenes del dibujo despues de inicializar el tablero.
-        for(Command comando : dibujarBarcos.getCommands()){
+        Commands dibujarBarcos = mostrarBarcosUbicados(flota);
+        // Aca incorporamos las ordenes del dibujo despues de inicializar el tablero.
+        for (Command comando : dibujarBarcos.getCommands()) {
             comandos.add(comando);
         }
+        //aca corroboramos que la flota se haya ubicado
+        Command estadoFlota = new Command(
+                "flotaUbicada",
+                flota.estanTodosUbicados());
+        comandos.add(estadoFlota);
         return comandos;
     }
 
