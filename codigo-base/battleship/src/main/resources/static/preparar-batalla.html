@@ -177,10 +177,11 @@
                     </select>
                 </label>
             </div>
-            <p>Seleccioná un barco y hacé clic en la celda inicial de Aguas propias.</p>
+            <p id="leyendaUbicacion" role="status" aria-live="polite"></p>
+            <p>Hacé clic en la celda inicial de Aguas propias.</p>
             <div class="tabla-contenedor">
                 <table>
-                    <caption>Barcos de tu flota</caption>
+                    <caption>Barcos disponibles para ubicar</caption>
                     <thead>
                         <tr>
                             <th scope="col">Barco</th>
@@ -215,6 +216,17 @@
         let aperturasEnCurso = 0;
         let lugarDePreparacion = "";
         let indiceSeleccionado = null;
+        let barcosDisponibles = [];
+
+        function actualizarLeyendaUbicacion() {
+            const seleccionado = barcosDisponibles.find((barco) => barco.indice === indiceSeleccionado);
+            const orientacion = document.getElementById("orientacionBarco").value === "true"
+                ? "horizontal" : "vertical";
+            document.getElementById("leyendaUbicacion").textContent = seleccionado
+                ? "Posicione su " + seleccionado.nombreTipo + " en forma " + orientacion
+                : "Batalla preparada";
+        }
+        document.getElementById("orientacionBarco").addEventListener("change", actualizarLeyendaUbicacion);
 
         function mostrarApertura(mensaje, esError = false) {
             const salida = document.getElementById("resultadoApertura");
@@ -364,9 +376,8 @@
             }
             // Orden visual por tamaño, conservando siempre los índices del servidor.
             const ordenados = barcos.slice().sort((a, b) => b.tamaño - a.tamaño || a.indice - b.indice);
-            if (!ordenados.some((barco) => barco.indice === indiceSeleccionado)) {
-                indiceSeleccionado = ordenados.length > 0 ? ordenados[0].indice : null;
-            }
+            barcosDisponibles = ordenados;
+            indiceSeleccionado = ordenados.length > 0 ? ordenados[0].indice : null;
             ordenados.forEach((barco) => {
                 const fila = document.createElement("tr");
                 // Conservar el índice del servidor; el número visible empieza en uno.
@@ -389,6 +400,7 @@
                         opcion.setAttribute("aria-label", "Seleccionar barco " + valor + ": " + barco.nombreTipo);
                         opcion.addEventListener("change", () => {
                             indiceSeleccionado = barco.indice;
+                            actualizarLeyendaUbicacion();
                             mostrarUbicacion("");
                         });
                         etiqueta.append(opcion, document.createTextNode(" " + valor));
@@ -402,8 +414,9 @@
             });
             estado.dataset.error = "false";
             estado.textContent = barcos.length === 0
-                ? "No hay barcos en esta flota."
-                : "Estado de ubicación de los barcos de tu flota.";
+                ? "No quedan barcos por ubicar."
+                : "Seleccioná un barco disponible para ubicarlo.";
+            actualizarLeyendaUbicacion();
         });
 
         view.handler("configuracionValidada", (mensaje) => {

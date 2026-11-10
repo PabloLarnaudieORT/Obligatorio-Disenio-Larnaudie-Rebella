@@ -44,9 +44,11 @@ public class BarcoPreparacionDto {
     public static List<BarcoPreparacionDto> listaDeBarcosPreparadosDtos(List<Barco> barcos) {
         List<BarcoPreparacionDto> dtos = new ArrayList<>();
         int indice = 0;
-        for(Barco barco : barcos){
-            BarcoPreparacionDto barcoPreparacionDto = new BarcoPreparacionDto(barco, indice);
-            dtos.add(barcoPreparacionDto);
+        for (Barco barco : barcos) {
+            if (!barco.estaUbicado()) {
+                BarcoPreparacionDto barcoPreparacionDto = new BarcoPreparacionDto(barco, indice);
+                dtos.add(barcoPreparacionDto);
+            }
             indice++;
         }
         return dtos;
