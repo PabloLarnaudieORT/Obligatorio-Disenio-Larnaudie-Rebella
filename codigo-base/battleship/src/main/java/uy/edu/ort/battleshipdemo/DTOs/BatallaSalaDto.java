@@ -8,6 +8,26 @@ public class BatallaSalaDto {
     private String lugar;
     private int fila;
     private int columna;
+    private int partesSanasPropias;
+    private int tamañoFlotaPropia;
+    private int partesSanasEnemigas;
+    private int tamañoFlotaEnemiga;
+
+    public int getPartesSanasPropias() {
+        return partesSanasPropias;
+    }
+
+    public int getTamañoFlotaPropia() {
+        return tamañoFlotaPropia;
+    }
+
+    public int getPartesSanasEnemigas() {
+        return partesSanasEnemigas;
+    }
+
+    public int getTamañoFlotaEnemiga() {
+        return tamañoFlotaEnemiga;
+    }
 
     public String getLugar() {
         return lugar;
@@ -37,6 +57,10 @@ public class BatallaSalaDto {
         lugar = batalla.getLugar();
         fila = batalla.getConfiguracion().getFilas();
         columna = batalla.getConfiguracion().getColumnas();
+        partesSanasPropias = batalla.getJugadorHumano().partesSanas();
+        tamañoFlotaPropia = batalla.getJugadorHumano().tamanioFlota();
+        partesSanasEnemigas =  batalla.getJugadorMaquina().partesSanas();
+        tamañoFlotaEnemiga = batalla.getJugadorMaquina().tamanioFlota();
     }
 
     public BatallaSalaDto(String lugar, int fila, int columna) {
