@@ -10,6 +10,7 @@ public class BattleShipApplication {
 
 	public static void main(String[] args) throws TipoBarcoException{
 		DatosPrueba.cargarTiposBarco();
+		DatosPrueba.cargarBatallaPreparacion();
 		SpringApplication.run(BattleShipApplication.class, args);
 	}
 
