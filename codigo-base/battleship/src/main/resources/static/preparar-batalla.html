@@ -87,6 +87,11 @@
         button { padding: 12px 18px; margin-top: 20px; border: 0;
             border-radius: 4px; background: #1b6398; color: white;
             font: inherit; cursor: pointer; }
+        .volver-sala { display: inline-block; margin: 12px 0 20px; padding: 10px 14px;
+            border: 1px solid #1b6398; border-radius: 4px; color: #1b6398;
+            text-decoration: none; line-height: 1.4; }
+        .volver-sala:hover { background: #edf3f8; }
+        .volver-sala:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
         button:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
         .controles-ubicacion { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
         .controles-ubicacion select { padding: 10px; font: inherit; }
@@ -111,6 +116,9 @@
 <body>
     <main>
         <h1>Preparar una nueva batalla</h1>
+        <nav aria-label="Navegación de preparación">
+            <a class="volver-sala" href="/">Volver a la sala de operaciones</a>
+        </nav>
         <p>Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
 
         <form id="formularioFlota" novalidate>
@@ -188,6 +196,7 @@
             <p id="estadoFlota" role="status" aria-live="polite"></p>
             <p id="resultadoUbicacion" role="status" aria-live="polite"></p>
             <div id="tableroPreparacion"></div>
+            <a class="volver-sala" href="/">Volver a la sala de operaciones</a>
         </section>
         <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
     </main>
