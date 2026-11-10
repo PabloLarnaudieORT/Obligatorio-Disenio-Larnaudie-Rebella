@@ -92,9 +92,9 @@ public class PresentadorPrepararBatalla {
     private Commands mostrarBarcosUbicados(Flota flota) {
         Commands comandos = Commands.create();
         for (Barco barco : flota.getBarcos()) {
-            //Aca tengo que hacer 2 for... por que 
-            //no puedo aplicar esto dentro de barco y crear un command
-            //desde dentro del barco.
+            // Aca tengo que hacer 2 for... por que
+            // no puedo aplicar esto dentro de barco y crear un command
+            // desde dentro del barco.
             for (Celda celda : barco.getCeldas()) {
                 ValorDto valorDto = new ValorDto(
                         celda.getFila(),
@@ -122,6 +122,30 @@ public class PresentadorPrepararBatalla {
         Commands comandos = mostrarBarcosUbicados(flotaHumana);
         comandos.add(new Command("barcoUbicado", "Barco ubicado!"));
         comandos.add(barcosPreparacion(flotaHumana));
+        return comandos;
+    }
+
+    @PostMapping("/abrirPreparacion")
+    public Commands abrirPreparacion(String lugarBatalla) throws BatallaException {
+        //primero buscamos la batalla
+        Batalla batalla = fachada.buscarBatalla(lugarBatalla);
+        if (batalla == null) {
+            throw new BatallaException("La batalla no existe");
+        }
+        //obtenemos la batalla del jugador humano.
+        Oceano oceano = batalla.getJugadorHumano().getOceano();
+        //cuado tenemos el oceano, podemos acceder a la flota
+        Flota flota = oceano.getFlota();
+        Commands comandos = Commands.create();
+        //Ahora creamos comandos, para lugarBatalla.
+        comandos.add(new Command("lugarBatalla", batalla.getLugar()));
+        comandos.add(inicializarTablero(oceano));
+        comandos.add(barcosPreparacion(flota));
+        Commands dibujarBarcos =  mostrarBarcosUbicados(flota);
+        //Aca incorporamos las ordenes del dibujo despues de inicializar el tablero.
+        for(Command comando : dibujarBarcos.getCommands()){
+            comandos.add(comando);
+        }
         return comandos;
     }
 

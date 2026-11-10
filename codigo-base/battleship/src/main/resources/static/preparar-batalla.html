@@ -91,6 +91,8 @@
         .controles-ubicacion { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
         .controles-ubicacion select { padding: 10px; font: inherit; }
         #tableroPreparacion { margin-top: 20px; min-width: 0; }
+        .abrir-preparacion { margin: 32px 0; padding-top: 16px; border-top: 1px solid #d5dfe8; }
+        #resultadoApertura[data-error="true"] { color: #a51f2d; }
         #resultadoUbicacion[data-error="true"] { color: #a51f2d; }
         #seccionBarcosPreparacion { margin-top: 32px; padding-top: 16px;
             border-top: 1px solid #d5dfe8; }
@@ -144,6 +146,18 @@
         <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
         <p id="resultadoValidacion" role="status" aria-live="polite"></p>
         </form>
+        <section class="abrir-preparacion" aria-labelledby="tituloAbrirPreparacion">
+            <h2 id="tituloAbrirPreparacion">Continuar una preparación</h2>
+            <p>Ingresá el lugar de una batalla existente para ver y ubicar sus barcos.</p>
+            <form id="formularioAbrirPreparacion" novalidate>
+                <div class="campo-lugar">
+                    <label for="lugarBatallaExistente">Lugar de la batalla</label>
+                    <input id="lugarBatallaExistente" name="lugarBatalla" type="text">
+                </div>
+                <button type="submit">Abrir preparación</button>
+            </form>
+            <p id="resultadoApertura" role="status" aria-live="polite"></p>
+        </section>
         <section id="seccionBarcosPreparacion" aria-labelledby="tituloBarcosPreparacion" hidden>
             <h2 id="tituloBarcosPreparacion">Ubicación de la flota</h2>
             <p>Lugar: <strong id="lugarPreparacion"></strong></p>
@@ -188,8 +202,15 @@
         const resultado = document.getElementById("resultadoValidacion");
         let enviandoValidacion = false;
         let ubicacionesEnCurso = 0;
+        let aperturasEnCurso = 0;
         let lugarDePreparacion = "";
         let indiceSeleccionado = null;
+
+        function mostrarApertura(mensaje, esError = false) {
+            const salida = document.getElementById("resultadoApertura");
+            salida.textContent = mensaje;
+            salida.dataset.error = String(esError);
+        }
 
         function mostrarUbicacion(mensaje, esError = false) {
             const salida = document.getElementById("resultadoUbicacion");
@@ -212,6 +233,8 @@
             onError: () => {
                 if (ubicacionesEnCurso > 0) {
                     mostrarUbicacion("No se pudo ubicar el barco. Revisá la selección y la posición elegida.", true);
+                } else if (aperturasEnCurso > 0) {
+                    mostrarApertura("No se pudo abrir la preparación. Comprobá el lugar de la batalla.", true);
                 } else if (enviandoValidacion) {
                     mostrarResultado("No se pudo validar la flota. Revisá los valores ingresados e intentá nuevamente.", true);
                 } else {
@@ -220,6 +243,7 @@
             },
             onException: (mensaje) => {
                 if (ubicacionesEnCurso > 0) mostrarUbicacion(mensaje, true);
+                else if (aperturasEnCurso > 0) mostrarApertura(mensaje, true);
                 else mostrarResultado(mensaje, true);
             }
         });
@@ -251,8 +275,15 @@
 
         // El lugar definitivo debe provenir del servidor, incluso cuando fue generado.
         view.handler("lugarBatalla", (lugar) => {
+            if (lugar !== lugarDePreparacion) {
+                indiceSeleccionado = null;
+                document.getElementById("orientacionBarco").value = "true";
+            }
             lugarDePreparacion = lugar;
             document.getElementById("lugarPreparacion").textContent = lugar;
+            document.getElementById("lugarBatallaExistente").value = lugar;
+            mostrarUbicacion("");
+            mostrarApertura("Preparación abierta: " + lugar + ".");
         });
         view.handler("barcoUbicado", (mensaje) => mostrarUbicacion(mensaje));
 
@@ -379,6 +410,20 @@
                 await dispatcher.submit("/preparacion-batalla/prepararBatalla", datos);
             } finally {
                 enviandoValidacion = false;
+            }
+        });
+
+        const formularioApertura = document.getElementById("formularioAbrirPreparacion");
+        formularioApertura.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            mostrarApertura("Abriendo preparación...");
+            aperturasEnCurso++;
+            try {
+                await dispatcher.submit("/preparacion-batalla/abrirPreparacion", {
+                    lugarBatalla: document.getElementById("lugarBatallaExistente").value
+                });
+            } finally {
+                aperturasEnCurso--;
             }
         });
 
