@@ -91,4 +91,36 @@ public class Flota {
         return true;
     }
 
+
+    public Barco barcoEn(Celda celda) {
+        return buscarBarco(celda);
+    }
+
+    public int tamanioTotal() {
+        return tamañoTotalDeLaFlota();
+    }
+
+    public boolean tieneCantidadBarcosUbicados(TipoBarco tipoBuscado, int cantidadEsperada) {
+        if (tipoBuscado == null || tipoBuscado.getNombre() == null) {
+            return false;
+        }
+
+        int cantidad = 0;
+        for (Barco barco : barcos) {
+            if (barco == null || barco.getTipo() == null
+                    || barco.getTipo().getNombre() == null) {
+                return false;
+            }
+
+            boolean mismoTipo = barco.getTipo().getNombre()
+                    .equalsIgnoreCase(tipoBuscado.getNombre());
+            boolean ubicado = barco.getCeldas().size()
+                    == barco.getTipo().getTamanio();
+
+            if (mismoTipo && ubicado) {
+                cantidad++;
+            }
+        }
+        return cantidad == cantidadEsperada;
+    }
 }
