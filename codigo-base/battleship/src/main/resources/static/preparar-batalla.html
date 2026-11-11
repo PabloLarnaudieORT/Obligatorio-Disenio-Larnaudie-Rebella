@@ -87,7 +87,18 @@
         button { padding: 12px 18px; margin-top: 20px; border: 0;
             border-radius: 4px; background: #1b6398; color: white;
             font: inherit; cursor: pointer; }
+        .volver-sala { display: inline-block; margin: 12px 0 20px; padding: 10px 14px;
+            border: 1px solid #1b6398; border-radius: 4px; color: #1b6398;
+            text-decoration: none; line-height: 1.4; }
+        .volver-sala:hover { background: #edf3f8; }
+        .volver-sala:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
         button:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        .controles-ubicacion { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+        .controles-ubicacion select { padding: 10px; font: inherit; }
+        #tableroPreparacion { margin-top: 20px; min-width: 0; }
+        .abrir-preparacion { margin: 32px 0; padding-top: 16px; border-top: 1px solid #d5dfe8; }
+        #resultadoApertura[data-error="true"] { color: #a51f2d; }
+        #resultadoUbicacion[data-error="true"] { color: #a51f2d; }
         #seccionBarcosPreparacion { margin-top: 32px; padding-top: 16px;
             border-top: 1px solid #d5dfe8; }
         #estadoBarcosPreparacion[data-error="true"] { color: #a51f2d; }
@@ -104,8 +115,11 @@
 </head>
 <body>
     <main>
-        <h1>Preparar una nueva batalla</h1>
-        <p>Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
+        <h1 id="tituloPreparacion">Preparar una nueva batalla</h1>
+        <nav aria-label="Navegación de preparación">
+            <a class="volver-sala" href="/">Volver a la sala de operaciones</a>
+        </nav>
+        <p id="descripcionConfiguracion">Definí la composición de tu flota. Ambos jugadores utilizarán la misma cantidad de barcos de cada tipo.</p>
 
         <form id="formularioFlota" novalidate>
         <div class="campo-lugar">
@@ -140,11 +154,34 @@
         <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
         <p id="resultadoValidacion" role="status" aria-live="polite"></p>
         </form>
+        <section id="seccionAbrirPreparacion" class="abrir-preparacion" aria-labelledby="tituloAbrirPreparacion">
+            <h2 id="tituloAbrirPreparacion">Continuar una preparación</h2>
+            <p>Ingresá el lugar de una batalla existente para ver y ubicar sus barcos.</p>
+            <form id="formularioAbrirPreparacion" novalidate>
+                <div class="campo-lugar">
+                    <label for="lugarBatallaExistente">Lugar de la batalla</label>
+                    <input id="lugarBatallaExistente" name="lugarBatalla" type="text">
+                </div>
+                <button type="submit">Abrir preparación</button>
+            </form>
+            <p id="resultadoApertura" role="status" aria-live="polite"></p>
+        </section>
         <section id="seccionBarcosPreparacion" aria-labelledby="tituloBarcosPreparacion" hidden>
             <h2 id="tituloBarcosPreparacion">Ubicación de la flota</h2>
+            <p>Lugar: <strong id="lugarPreparacion"></strong></p>
+            <div class="controles-ubicacion">
+                <label for="orientacionBarco">Orientación
+                    <select id="orientacionBarco">
+                        <option value="true" selected>Horizontal</option>
+                        <option value="false">Vertical</option>
+                    </select>
+                </label>
+            </div>
+            <p id="leyendaUbicacion" role="status" aria-live="polite"></p>
+            <p>Hacé clic en la celda inicial de Aguas propias.</p>
             <div class="tabla-contenedor">
                 <table>
-                    <caption>Barcos de tu flota</caption>
+                    <caption>Barcos disponibles para ubicar</caption>
                     <thead>
                         <tr>
                             <th scope="col">Barco</th>
@@ -157,12 +194,18 @@
                 </table>
             </div>
             <p id="estadoBarcosPreparacion" role="status" aria-live="polite"></p>
+            <p id="estadoFlota" role="status" aria-live="polite"></p>
+            <p id="resultadoUbicacion" role="status" aria-live="polite"></p>
+            <div id="tableroPreparacion"></div>
+            <button id="librarBatalla" type="button">Librar batalla</button>
+            <a class="volver-sala" href="/">Volver a la sala de operaciones</a>
         </section>
         <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
     </main>
 
     <script type="module">
         import dispatcher from "./CommandDispatcher.js";
+        import BattleShipBoard from "./BattleShipBoard.js";
 
         const cuerpoTabla = document.getElementById("tiposBarco");
         const estadoCatalogo = document.getElementById("estadoCatalogo");
@@ -170,6 +213,34 @@
         const formulario = document.getElementById("formularioFlota");
         const resultado = document.getElementById("resultadoValidacion");
         let enviandoValidacion = false;
+        let ubicacionesEnCurso = 0;
+        let validacionesDeCombateEnCurso = 0;
+        let aperturasEnCurso = 0;
+        let lugarDePreparacion = "";
+        let indiceSeleccionado = null;
+        let barcosDisponibles = [];
+
+        function actualizarLeyendaUbicacion() {
+            const seleccionado = barcosDisponibles.find((barco) => barco.indice === indiceSeleccionado);
+            const orientacion = document.getElementById("orientacionBarco").value === "true"
+                ? "horizontal" : "vertical";
+            document.getElementById("leyendaUbicacion").textContent = seleccionado
+                ? "Posicione su " + seleccionado.nombreTipo + " en forma " + orientacion
+                : "Batalla preparada";
+        }
+        document.getElementById("orientacionBarco").addEventListener("change", actualizarLeyendaUbicacion);
+
+        function mostrarApertura(mensaje, esError = false) {
+            const salida = document.getElementById("resultadoApertura");
+            salida.textContent = mensaje;
+            salida.dataset.error = String(esError);
+        }
+
+        function mostrarUbicacion(mensaje, esError = false) {
+            const salida = document.getElementById("resultadoUbicacion");
+            salida.textContent = mensaje;
+            salida.dataset.error = String(esError);
+        }
 
         function mostrarResultado(mensaje, esError = false) {
             resultado.textContent = mensaje;
@@ -184,13 +255,89 @@
         const view = dispatcher.registerView("preparar-batalla", {
             urlInicio: "/preparacion-batalla/vistaConectada",
             onError: () => {
-                if (enviandoValidacion) {
+                if (validacionesDeCombateEnCurso > 0) {
+                    mostrarUbicacion("No se pudo validar la flota para librar batalla.", true);
+                } else if (ubicacionesEnCurso > 0) {
+                    mostrarUbicacion("No se pudo ubicar el barco. Revisá la selección y la posición elegida.", true);
+                } else if (aperturasEnCurso > 0) {
+                    mostrarApertura("No se pudo abrir la preparación. Comprobá el lugar de la batalla.", true);
+                } else if (enviandoValidacion) {
                     mostrarResultado("No se pudo validar la flota. Revisá los valores ingresados e intentá nuevamente.", true);
                 } else {
                     mostrarEstado("No se pudieron cargar los tipos de barco. Intentá nuevamente más tarde.", true);
                 }
             },
-            onException: (mensaje) => mostrarResultado(mensaje, true)
+            onException: (mensaje) => {
+                if (validacionesDeCombateEnCurso > 0 || ubicacionesEnCurso > 0) mostrarUbicacion(mensaje, true);
+                else if (aperturasEnCurso > 0) mostrarApertura(mensaje, true);
+                else mostrarResultado(mensaje, true);
+            }
+        });
+
+        // Adaptación de datos de la vista. El tablero y el dispatcher originales no se modifican.
+        const dispatcherTablero = {
+            mapFunctions: (...argumentos) => dispatcher.mapFunctions(...argumentos),
+            submit: async (url, coordenadas) => {
+                ubicacionesEnCurso++;
+                mostrarUbicacion("Ubicando barco...");
+                try {
+                    return await dispatcher.submit(url, {
+                        lugarDeLaBatalla: lugarDePreparacion,
+                        indiceDelBarco: indiceSeleccionado ?? -1,
+                        fila: coordenadas.coordenadaVertical,
+                        columna: coordenadas.coordenadaHorizontal,
+                        esHorizontal: document.getElementById("orientacionBarco").value
+                    });
+                } finally {
+                    ubicacionesEnCurso--;
+                }
+            }
+        };
+        const tablero = new BattleShipBoard(
+            document.getElementById("tableroPreparacion"),
+            dispatcherTablero,
+            { anchoMaximo: 760, altoMaximo: 760, tamanoFuente: 12, tamanoIcono: 22 }
+        );
+
+        // El lugar definitivo debe provenir del servidor, incluso cuando fue generado.
+        view.handler("lugarBatalla", (lugar) => {
+            // El servidor confirmó la apertura: pasar de configuración a despliegue.
+            document.getElementById("tituloPreparacion").textContent = "Desplegando la Flota";
+            document.title = "Desplegando la Flota";
+            document.getElementById("descripcionConfiguracion").hidden = true;
+            formulario.hidden = true;
+            document.getElementById("seccionAbrirPreparacion").hidden = true;
+            if (lugar !== lugarDePreparacion) {
+                indiceSeleccionado = null;
+                document.getElementById("orientacionBarco").value = "true";
+            }
+            document.getElementById("estadoFlota").textContent = "";
+            lugarDePreparacion = lugar;
+            document.getElementById("lugarPreparacion").textContent = lugar;
+            document.getElementById("lugarBatallaExistente").value = lugar;
+            mostrarUbicacion("");
+            mostrarApertura("Preparación abierta: " + lugar + ".");
+        });
+        view.handler("barcoUbicado", (mensaje) => mostrarUbicacion(mensaje));
+        view.handler("flotaListaParaCombatir", (mensaje) => mostrarUbicacion(mensaje));
+
+        document.getElementById("librarBatalla").addEventListener("click", async () => {
+            mostrarUbicacion("Validando la flota...");
+            validacionesDeCombateEnCurso++;
+            try {
+                await dispatcher.submit("/preparacion-batalla/validarFlotaParaLibrarBatalla", {
+                    lugarBatalla: lugarDePreparacion
+                });
+            } finally {
+                validacionesDeCombateEnCurso--;
+            }
+        });
+
+        // El modelo decide si la flota está ubicada; la vista solo muestra su respuesta.
+        view.handler("flotaUbicada", (completa) => {
+            document.getElementById("estadoFlota").textContent = completa === true
+                ? "Todos los barcos están ubicados."
+                : "Quedan barcos por ubicar.";
         });
 
         function crearFila(tipo, indice, cantidad) {
@@ -250,7 +397,11 @@
                 estado.dataset.error = "true";
                 return;
             }
-            barcos.forEach((barco) => {
+            // Orden visual por tamaño, conservando siempre los índices del servidor.
+            const ordenados = barcos.slice().sort((a, b) => b.tamaño - a.tamaño || a.indice - b.indice);
+            barcosDisponibles = ordenados;
+            indiceSeleccionado = ordenados.length > 0 ? ordenados[0].indice : null;
+            ordenados.forEach((barco) => {
                 const fila = document.createElement("tr");
                 // Conservar el índice del servidor; el número visible empieza en uno.
                 fila.dataset.indice = String(barco.indice);
@@ -260,17 +411,35 @@
                     barco.tamaño,
                     barco.barcoUbicado ? "Ubicado" : "Pendiente de ubicación"
                 ];
-                valores.forEach((valor) => {
+                valores.forEach((valor, columna) => {
                     const celda = document.createElement("td");
-                    celda.textContent = String(valor);
+                    if (columna === 0) {
+                        const etiqueta = document.createElement("label");
+                        const opcion = document.createElement("input");
+                        opcion.type = "radio";
+                        opcion.name = "barcoSeleccionado";
+                        opcion.value = String(barco.indice);
+                        opcion.checked = barco.indice === indiceSeleccionado;
+                        opcion.setAttribute("aria-label", "Seleccionar barco " + valor + ": " + barco.nombreTipo);
+                        opcion.addEventListener("change", () => {
+                            indiceSeleccionado = barco.indice;
+                            actualizarLeyendaUbicacion();
+                            mostrarUbicacion("");
+                        });
+                        etiqueta.append(opcion, document.createTextNode(" " + valor));
+                        celda.appendChild(etiqueta);
+                    } else {
+                        celda.textContent = String(valor);
+                    }
                     fila.appendChild(celda);
                 });
                 cuerpo.appendChild(fila);
             });
             estado.dataset.error = "false";
             estado.textContent = barcos.length === 0
-                ? "No hay barcos en esta flota."
-                : "Estado de ubicación de los barcos de tu flota.";
+                ? "No quedan barcos por ubicar."
+                : "Seleccioná un barco disponible para ubicarlo.";
+            actualizarLeyendaUbicacion();
         });
 
         view.handler("configuracionValidada", (mensaje) => {
@@ -298,8 +467,31 @@
             }
         });
 
+        async function abrirPreparacion(lugarBatalla) {
+            mostrarApertura("Abriendo preparación...");
+            aperturasEnCurso++;
+            try {
+                await dispatcher.submit("/preparacion-batalla/abrirPreparacion", { lugarBatalla });
+            } finally {
+                aperturasEnCurso--;
+            }
+        }
+
+        const formularioApertura = document.getElementById("formularioAbrirPreparacion");
+        formularioApertura.addEventListener("submit", (evento) => {
+            evento.preventDefault();
+            return abrirPreparacion(document.getElementById("lugarBatallaExistente").value);
+        });
+
         // Iniciar después de registrar el manejador, para recibir la primera respuesta.
         dispatcher.startView(view);
+
+        // Reutilizar la misma apertura cuando se llega desde una fila de la sala.
+        const lugarDesdeSala = new URLSearchParams(window.location.search).get("lugarBatalla");
+        if (lugarDesdeSala !== null) {
+            document.getElementById("lugarBatallaExistente").value = lugarDesdeSala;
+            abrirPreparacion(lugarDesdeSala);
+        }
     </script>
 </body>
 </html>

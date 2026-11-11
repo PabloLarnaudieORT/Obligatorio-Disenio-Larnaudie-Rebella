@@ -1,4 +1,5 @@
 package uy.edu.ort.battleshipdemo.fachadas;
+
 import uy.edu.ort.battleshipdemo.servicios.SistemaTiposBarco;
 import uy.edu.ort.battleshipdemo.servicios.SistemaBatallas;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
@@ -18,12 +19,14 @@ public class Fachada {
         }
         return instancia;
     }
+
     private Fachada() {
     }
 
     public List<TipoBarco> getTiposBarco() {
         return sistemaTiposBarco.getTiposBarco();
     }
+
     public void agregarTipoBarco(TipoBarco tipo) throws TipoBarcoException {
         sistemaTiposBarco.agregarTipoBarco(tipo);
     }
@@ -40,8 +43,25 @@ public class Fachada {
         return sistemaBatallas.buscarBatalla(nombreLugar);
     }
 
-    public TipoBarco buscarTipoBarco(String nombreDelTipoBarco){
+    public TipoBarco buscarTipoBarco(String nombreDelTipoBarco) {
         return sistemaTiposBarco.buscarTipoBarco(nombreDelTipoBarco);
+    }
+
+    public void ubicarBarco(String lugarBatalla, int indiceBarco, int fila, int columna, boolean horizontal)
+            throws BatallaException {
+        sistemaBatallas.ubicarBarco(lugarBatalla, indiceBarco, fila, columna, horizontal);
+    }
+
+    public void validarFlotaParaLibrarBatalla(String lugarBatalla) throws BatallaException {
+        sistemaBatallas.validarFlotaParaLibrarBatalla(lugarBatalla);
+    }
+
+    public int contarBatallasPorEstado(Batalla.Estados estadoBuscado) {
+        return sistemaBatallas.contarBatallasPorEstado(estadoBuscado);
+    }
+
+    public double calcularPorcentajeExito() {
+        return sistemaBatallas.calcularPorcentajeExito();
     }
 
 }

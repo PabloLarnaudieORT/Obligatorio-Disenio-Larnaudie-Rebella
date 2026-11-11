@@ -1,6 +1,9 @@
 package uy.edu.ort.battleshipdemo.servicios;
 
 import uy.edu.ort.battleshipdemo.Modelo.Batalla;
+import uy.edu.ort.battleshipdemo.Modelo.Oceano;
+import uy.edu.ort.battleshipdemo.Modelo.Flota;
+import uy.edu.ort.battleshipdemo.Modelo.Barco;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -27,8 +30,8 @@ public class SistemaBatallas {
         String letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         Random azar = new Random(); // averigue como generar algo random y es asi.
         String nombreDelLugar = "";
-        //intente usando if... pero no funciono
-        //entonces usé do while, para ver si el nombre esta ocupado
+        // intente usando for... pero no funciono
+        // entonces usé do while, para ver si el nombre esta ocupado
         do {
             nombreDelLugar = "";
             // le pregunté a la IA como generar un nombre al azar.
@@ -45,13 +48,14 @@ public class SistemaBatallas {
             throw new BatallaException("La batalla no puede ser nula");
         }
         String nombreLugar = batalla.getLugar();
-        if (nombreLugar == null || nombreLugar.isEmpty()) {
-            //debido a que no puede ser vacio el nombre, vamos a poner generarLugar
+        // Probando, me di cuenta que faltaba un trim()
+        if (nombreLugar == null || nombreLugar.trim().isEmpty()) {
+            // debido a que no puede ser vacio el nombre, vamos a poner generarLugar
             nombreLugar = generarLugar();
             batalla.setLugar(nombreLugar);
         }
         if (buscarBatalla(nombreLugar) != null) {
-            throw new BatallaException("Ya existe una batalla en el lugar: " + nombreLugar);
+            throw new BatallaException("No se puede librar más de una batalla en el mismo lugar, cambie de nombre");
         }
         this.batallas.add(batalla);
     }
@@ -70,4 +74,54 @@ public class SistemaBatallas {
         // no puedo tirar una excepcion batalla...
         return null;
     }
+
+    public void ubicarBarco(String lugarBatalla, int indiceBarco, int fila, int columna, boolean horizontal)
+            throws BatallaException {
+        Batalla batalla = buscarBatalla(lugarBatalla);
+        if (batalla == null) {
+            throw new BatallaException("La batalla indicada no existe.");
+        }
+        // para ubicar el barco, tenemos que conocer el oceanno del jugador
+        Oceano oceano = batalla.getJugadorHumano().getOceano();
+        // aca buscamos la flota que tenga el oceano que tenia el jugador...
+        Flota flota = oceano.getFlota();
+        // y a su vez, buscamos el barco que tiene la flota por su indice.
+        Barco barco = flota.buscarUnBarcoPorSuIndice(indiceBarco);
+        oceano.ubicarBarco(barco, fila, columna, horizontal);
+
+    }
+
+    //Esto lo vamos a usar para mostrar estadisticas de la campaña
+    public int contarBatallasPorEstado(Batalla.Estados estadoBuscado) {
+        int cantidad = 0;
+        for (Batalla batalla : batallas) {
+            Batalla.Estados estadoActual = batalla.getEstado().getEstado();
+            if (estadoActual == estadoBuscado) {
+                cantidad++;
+            }
+        }
+        return cantidad;
+    }
+
+    public double calcularPorcentajeExito(){
+        int batallasTotal = batallas.size();
+        //aca evitamos dividir por cero
+        if(batallasTotal == 0){
+            return 0.0;
+        }
+        int ganados = contarBatallasPorEstado(Batalla.Estados.ganada);
+        return (100.0 * ganados / batallasTotal);
+    }
+
+    public void validarFlotaParaLibrarBatalla(String lugarBatalla) throws BatallaException{
+        Batalla batalla = buscarBatalla(lugarBatalla);
+        if(batalla == null){
+            throw new BatallaException("La batalla ingresada no existe");
+        }
+        Oceano oceano = batalla.getJugadorHumano().getOceano();
+        if(!oceano.estanTodosUbicados()){
+            throw new BatallaException("Debe posicionar todos sus barcos primero");
+        }
+    }
+
 }

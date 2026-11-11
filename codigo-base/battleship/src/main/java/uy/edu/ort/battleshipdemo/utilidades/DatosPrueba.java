@@ -1,9 +1,14 @@
 package uy.edu.ort.battleshipdemo.utilidades;
 
 import uy.edu.ort.battleshipdemo.Modelo.ConfiguracionBatalla;
+import uy.edu.ort.battleshipdemo.Modelo.Batalla;
+import uy.edu.ort.battleshipdemo.Modelo.Jugador.JugadorHumano;
+import uy.edu.ort.battleshipdemo.Modelo.Jugador.JugadorMaquina;
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.TacticaSecuencial;
 import uy.edu.ort.battleshipdemo.Modelo.Barco;
 import uy.edu.ort.battleshipdemo.Modelo.Celda;
 import uy.edu.ort.battleshipdemo.Modelo.Flota;
+import uy.edu.ort.battleshipdemo.Modelo.Oceano;
 import uy.edu.ort.battleshipdemo.Modelo.DetalleFlota;
 import uy.edu.ort.battleshipdemo.Modelo.TipoBarco;
 import uy.edu.ort.battleshipdemo.fachadas.Fachada;
@@ -31,6 +36,39 @@ public class DatosPrueba {
                 fachada.agregarTipoBarco(new TipoBarco("Crucero", 3));
                 fachada.agregarTipoBarco(new TipoBarco("Submarino", 2));
                 fachada.agregarTipoBarco(new TipoBarco("Destructor", 1));
+        }
+
+        // Precarga de ejemplo generada con ayuda de IA para comprobar la ubicación.
+        // Llamar después de cargarTiposBarco(). No inicia combate ni ejecuta la táctica.
+        public static void cargarBatallaPreparacion() throws BatallaException {
+                Fachada fachada = Fachada.getInstancia();
+                // Conservar una preparación existente, incluidas sus ubicaciones.
+                if (fachada.buscarBatalla("PRUEBA") != null) {
+                        return;
+                }
+                TipoBarco acorazado = fachada.buscarTipoBarco("Acorazado");
+                TipoBarco submarino = fachada.buscarTipoBarco("Submarino");
+                if (acorazado == null || submarino == null) {
+                        throw new BatallaException("Cargá los tipos de barco antes de la batalla de ejemplo.");
+                }
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(acorazado, 1));
+                detalles.add(new DetalleFlota(submarino, 1));
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 8, detalles);
+                configuracion.validar();
+
+                JugadorHumano humano = new JugadorHumano("Humano de prueba");
+                humano.setOceano(configuracion.crearOceano());
+                JugadorMaquina maquina = new JugadorMaquina("Máquina de prueba", new TacticaSecuencial());
+                maquina.setOceano(configuracion.crearOceano());
+
+                Batalla batalla = new Batalla();
+                batalla.setLugar("PRUEBA");
+                batalla.setConfiguracion(configuracion);
+                batalla.setJugadorHumano(humano);
+                batalla.setJugadorMaquina(maquina);
+                // El constructor de Batalla ya establece EstadoEnPreparacion.
+                fachada.agregarBatalla(batalla);
         }
 
         public static void probarConfiguracion() throws TipoBarcoException {
@@ -202,6 +240,180 @@ public class DatosPrueba {
                 }
                 System.out.println((cambioAislado ? "OK" : "ERROR") + " | Agregar una celda a un barco no cambia los demás.");
                 System.out.println("--- Fin de la comprobación de creación de flotas ---");
+        }
+
+        // Datos y comprobaciones manuales generados con ayuda de IA.
+        // Trabaja con océanos locales; no registra batallas ni cambia el arranque.
+        public static void probarCreacionOceanos() throws TipoBarcoException, BatallaException {
+                TipoBarco acorazado = new TipoBarco("Acorazado", 4);
+                TipoBarco submarino = new TipoBarco("Submarino", 2);
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(acorazado, 2));
+                detalles.add(new DetalleFlota(submarino, 1));
+                // Tablero rectangular para detectar si se intercambian filas y columnas.
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 10, detalles);
+                Oceano primero = configuracion.crearOceano();
+                Oceano segundo = configuracion.crearOceano();
+                List<Oceano> oceanos = new ArrayList<>();
+                oceanos.add(primero);
+                oceanos.add(segundo);
+
+                boolean dimensionesCorrectas = true;
+                boolean celdasCorrectas = true;
+                boolean celdasIndependientes = primero != segundo
+                                && primero.getCeldas() != segundo.getCeldas();
+                boolean barcosSinUbicar = true;
+                boolean composicionCorrecta = true;
+                List<Celda> celdasVistas = new ArrayList<>();
+                for (Oceano oceano : oceanos) {
+                        if (oceano.getFilas() != 8 || oceano.getColumnas() != 10
+                                        || oceano.getCeldas().length != 8) dimensionesCorrectas = false;
+                        for (int fila = 0; fila < oceano.getCeldas().length; fila++) {
+                                if (oceano.getCeldas()[fila].length != 10) dimensionesCorrectas = false;
+                                for (int columna = 0; columna < oceano.getCeldas()[fila].length; columna++) {
+                                        Celda celda = oceano.getCeldas()[fila][columna];
+                                        if (celda == null) {
+                                                celdasCorrectas = false;
+                                        } else {
+                                                if (celda.getFila() != fila || celda.getColumna() != columna
+                                                                || celda.isDisparada()) celdasCorrectas = false;
+                                                if (celdasVistas.contains(celda)) celdasIndependientes = false;
+                                                celdasVistas.add(celda);
+                                        }
+                                }
+                        }
+                        int cantidadAcorazados = 0;
+                        int cantidadSubmarinos = 0;
+                        for (Barco barco : oceano.getFlota().getBarcos()) {
+                                if (barco.getTipo() == acorazado) cantidadAcorazados++;
+                                if (barco.getTipo() == submarino) cantidadSubmarinos++;
+                                if (barco.estaUbicado() || !barco.getCeldas().isEmpty()) barcosSinUbicar = false;
+                        }
+                        if (oceano.getFlota().getBarcos().size() != 3
+                                        || cantidadAcorazados != 2 || cantidadSubmarinos != 1) composicionCorrecta = false;
+                }
+                boolean flotasIndependientes = primero.getFlota() != segundo.getFlota()
+                                && primero.getFlota().getBarcos() != segundo.getFlota().getBarcos();
+                for (Barco barcoPrimero : primero.getFlota().getBarcos()) {
+                        for (Barco barcoSegundo : segundo.getFlota().getBarcos()) {
+                                if (barcoPrimero == barcoSegundo
+                                                || barcoPrimero.getCeldas() == barcoSegundo.getCeldas()) flotasIndependientes = false;
+                        }
+                }
+
+                System.out.println("--- Comprobación de creación de océanos ---");
+                System.out.println((dimensionesCorrectas ? "OK" : "ERROR") + " | Ambos tableros tienen 8 filas y 10 columnas.");
+                System.out.println((celdasCorrectas ? "OK" : "ERROR") + " | Celdas inicializadas con coordenadas correctas y sin disparos.");
+                System.out.println((celdasIndependientes ? "OK" : "ERROR") + " | Los océanos y sus celdas son independientes.");
+                System.out.println((composicionCorrecta ? "OK" : "ERROR") + " | Cada océano tiene dos acorazados y un submarino.");
+                System.out.println((barcosSinUbicar ? "OK" : "ERROR") + " | Todos los barcos comienzan sin ubicar.");
+                System.out.println((flotasIndependientes ? "OK" : "ERROR") + " | Las flotas, barcos y listas de celdas no se comparten.");
+
+                Barco barcoUbicado = primero.getFlota().getBarcos().get(0);
+                primero.ubicarBarco(barcoUbicado, 0, 0, true);
+                boolean ubicacionCorrecta = barcoUbicado.estaUbicado()
+                                && barcoUbicado.getCeldas().size() == 4;
+                for (int columna = 0; columna < 4; columna++) {
+                        if (!barcoUbicado.getCeldas().contains(primero.getCeldas()[0][columna])
+                                        || primero.getFlota().buscarBarco(primero.getCeldas()[0][columna]) != barcoUbicado) ubicacionCorrecta = false;
+                }
+                boolean cambioAislado = true;
+                for (int i = 1; i < primero.getFlota().getBarcos().size(); i++) {
+                        if (!primero.getFlota().getBarcos().get(i).getCeldas().isEmpty()) cambioAislado = false;
+                }
+                for (Barco barco : segundo.getFlota().getBarcos()) {
+                        if (barco.estaUbicado() || !barco.getCeldas().isEmpty()) cambioAislado = false;
+                }
+                for (Celda celda : celdasVistas) {
+                        if (celda.isDisparada()) cambioAislado = false;
+                }
+                System.out.println((ubicacionCorrecta ? "OK" : "ERROR") + " | El acorazado queda ubicado en las cuatro celdas de su océano.");
+                System.out.println((cambioAislado ? "OK" : "ERROR") + " | Ubicarlo no modifica los otros barcos ni marca disparos.");
+                System.out.println("--- Fin de la comprobación de creación de océanos ---");
+        }
+
+        // Comprobaciones manuales generadas con ayuda de IA; no se invocan al arrancar.
+        // Retira únicamente sus propios ejemplos al finalizar, sin vaciar el registro.
+        public static void probarLugaresBatalla() throws TipoBarcoException, BatallaException {
+                Fachada fachada = Fachada.getInstancia();
+                List<Batalla> ejemplos = new ArrayList<>();
+                List<String> lugaresOmitidos = new ArrayList<>();
+                lugaresOmitidos.add(null);
+                lugaresOmitidos.add("");
+                lugaresOmitidos.add("   ");
+                List<String> generados = new ArrayList<>();
+                System.out.println("--- Comprobación de lugares de batalla ---");
+                try {
+                        int numeroCaso = 0;
+                        for (String omitido : lugaresOmitidos) {
+                                numeroCaso++;
+                                Batalla batalla = crearBatallaParaComprobarLugar(omitido);
+                                ejemplos.add(batalla);
+                                fachada.agregarBatalla(batalla);
+                                String generado = batalla.getLugar();
+                                boolean formatoCorrecto = generado != null && generado.length() == 6;
+                                if (formatoCorrecto) {
+                                        for (int i = 0; i < generado.length(); i++) {
+                                                if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(generado.charAt(i)) < 0) formatoCorrecto = false;
+                                        }
+                                }
+                                System.out.println((formatoCorrecto ? "OK" : "ERROR")
+                                                + " | Lugar omitido, caso " + numeroCaso + ": seis letras mayúsculas.");
+                                generados.add(generado);
+                        }
+                        boolean distintos = true;
+                        for (int i = 0; i < generados.size(); i++) {
+                                for (int j = i + 1; j < generados.size(); j++) {
+                                        if (generados.get(i).equals(generados.get(j))) distintos = false;
+                                }
+                        }
+                        System.out.println((distintos ? "OK" : "ERROR") + " | Los nombres generados registrados son distintos.");
+
+                        String elegido = "Lugar de comprobación";
+                        while (fachada.buscarBatalla(elegido) != null) elegido += "X";
+                        Batalla original = crearBatallaParaComprobarLugar(elegido);
+                        ejemplos.add(original);
+                        fachada.agregarBatalla(original);
+                        boolean conservado = elegido.equals(original.getLugar())
+                                        && fachada.buscarBatalla(elegido) == original;
+                        System.out.println((conservado ? "OK" : "ERROR") + " | Se conserva el nombre ingresado.");
+
+                        int cantidadAntes = fachada.getBatallas().size();
+                        Batalla repetida = crearBatallaParaComprobarLugar(elegido);
+                        ejemplos.add(repetida);
+                        boolean mensajeCorrecto = false;
+                        try {
+                                fachada.agregarBatalla(repetida);
+                        } catch (BatallaException error) {
+                                mensajeCorrecto = "No se puede librar más de una batalla en el mismo lugar, cambie de nombre"
+                                                .equals(error.getMessage());
+                        }
+                        System.out.println((mensajeCorrecto ? "OK" : "ERROR") + " | Lugar duplicado rechazado con el mensaje de la letra.");
+                        boolean registroIntacto = fachada.getBatallas().size() == cantidadAntes
+                                        && !fachada.getBatallas().contains(repetida)
+                                        && fachada.buscarBatalla(elegido) == original;
+                        System.out.println((registroIntacto ? "OK" : "ERROR") + " | La batalla rechazada no se agrega y se conserva la original.");
+                } finally {
+                        for (Batalla ejemplo : ejemplos) fachada.getBatallas().remove(ejemplo);
+                }
+                System.out.println("--- Fin de la comprobación de lugares ---");
+        }
+
+        private static Batalla crearBatallaParaComprobarLugar(String lugar) throws TipoBarcoException, BatallaException {
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(new TipoBarco("Acorazado", 4), 1));
+                detalles.add(new DetalleFlota(new TipoBarco("Submarino", 2), 1));
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 8, detalles);
+                JugadorHumano humano = new JugadorHumano("Humano de ejemplo");
+                humano.setOceano(configuracion.crearOceano());
+                JugadorMaquina maquina = new JugadorMaquina("Máquina de ejemplo", new TacticaSecuencial());
+                maquina.setOceano(configuracion.crearOceano());
+                Batalla batalla = new Batalla();
+                batalla.setLugar(lugar);
+                batalla.setConfiguracion(configuracion);
+                batalla.setJugadorHumano(humano);
+                batalla.setJugadorMaquina(maquina);
+                return batalla;
         }
 
         private static ConfiguracionBatalla crearConfiguracion(int filas, int columnas, List<DetalleFlota> detalles) {
