@@ -32,6 +32,28 @@ public class ConfiguracionBatalla {
         this.flota = flota;
     }
 
+    public boolean flotaCompleta(Flota flotaActual) {
+        if (flota == null || flotaActual == null) {
+            return false;
+        }
+
+        int cantidadEsperadaTotal = 0;
+        for (DetalleFlota detalle : flota) {
+            if (detalle == null || detalle.getTipo() == null
+                    || detalle.getTipo().getNombre() == null) {
+                return false;
+            }
+
+            cantidadEsperadaTotal += detalle.getCantidad();
+            if (!flotaActual.tieneCantidadBarcosUbicados(
+                    detalle.getTipo(), detalle.getCantidad())) {
+                return false;
+            }
+        }
+
+        return flotaActual.getBarcos().size() == cantidadEsperadaTotal;
+    }
+
     public void validar() {
         // filas y columnas entre 6 y 12, inclusive.
         // flota no nula hayq que validar cada DetalleFlota.

@@ -25,12 +25,20 @@ public class Barco {
 
     public List<Celda> getCeldas() { return celdas; }
 
+//aqui vamos a contar las partes sanas del barco, es dcirr las celds que no fueron disparadass
     public int partesSanas() {
-        //Aca con nati tenemos que determinar las partes sanas a partir del tamaño y las celdas alcanzadas.
+        int cantidad = 0;
+        for (Celda celda : celdas) {
+            if (!celda.isDisparada()) {
+                cantidad++;
+            }
+        }
+        return cantidad;
     }
 
+//aqui lo que hacemos es verificar que las partes sanas sean igual a 0, es decir que este hundido. 
     public boolean estaHundido() {
-        //Aca con nati tenemos que comprobar que está posicionado y que no tiene partes sanas.
+        return partesSanas() == 0;
     }
 
 }
