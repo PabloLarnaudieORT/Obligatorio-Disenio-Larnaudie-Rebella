@@ -40,7 +40,8 @@ public class PresentadorPrepararBatalla {
     }
 
     // fachada-getTiposBarco() obtiene los tipos del catalogo.
-    // TipoBarcoDto.listaDeBarcosPreparadosDtos() convierte la lista de tipos de barco a una lista de
+    // TipoBarcoDto.listaDeBarcosPreparadosDtos() convierte la lista de tipos de
+    // barco a una lista de
     // DTOs.
     private Command tiposBarco() {
         return new Command(
@@ -75,7 +76,8 @@ public class PresentadorPrepararBatalla {
     private Command inicializarTablero(Oceano oceano) {
         int filas = oceano.getFilas();
         int columnas = oceano.getColumnas();
-        InicializarDto datosDelTablero = new InicializarDto(filas, columnas, "/preparacion-batalla/ubicarBarco", "/preparacion-batalla/ubicarEnAguasEnemigas");
+        InicializarDto datosDelTablero = new InicializarDto(filas, columnas, "/preparacion-batalla/ubicarBarco",
+                "/preparacion-batalla/ubicarEnAguasEnemigas");
         return new Command("inicializar", datosDelTablero);
 
     }
@@ -150,7 +152,7 @@ public class PresentadorPrepararBatalla {
         for (Command comando : dibujarBarcos.getCommands()) {
             comandos.add(comando);
         }
-        //aca corroboramos que la flota se haya ubicado
+        // aca corroboramos que la flota se haya ubicado
         Command estadoFlota = new Command(
                 "flotaUbicada",
                 flota.estanTodosUbicados());
@@ -158,9 +160,16 @@ public class PresentadorPrepararBatalla {
         return comandos;
     }
 
-    @PostMapping ("/ubicarEnAguasEnemigas")
-    public Commands ubicarEnAguasEnemigas() throws BatallaException{
+    @PostMapping("/ubicarEnAguasEnemigas")
+    public Commands ubicarEnAguasEnemigas() throws BatallaException {
         throw new BatallaException("No puede ubicar barcos en aguas enemigas");
+    }
+
+    @PostMapping("/validarFlotaParaLibrarBatalla")
+    public Commands validarFlotaParaLibrarBatalla(String lugarBatalla) throws BatallaException {
+        fachada.validarFlotaParaLibrarBatalla(lugarBatalla);
+        return Commands.create(
+                new Command("flotaListaParaCombatir", "La flota está lista para librar batalla."));
     }
 
 }

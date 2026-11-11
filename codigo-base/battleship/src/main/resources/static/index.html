@@ -18,6 +18,9 @@
             color: white; background: #1b6398; cursor: pointer; }
         a { color: #1b6398; text-underline-offset: 3px; }
         button:focus-visible, a:focus-visible { outline: 3px solid #183047; outline-offset: 3px; }
+        .estadisticas { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 24px 0; }
+        .estadisticas dt { color: #445d73; }
+        .estadisticas dd { margin: 6px 0 0; font-size: 1.25rem; font-weight: bold; }
         .tabla-contenedor { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         caption { margin-bottom: 12px; text-align: left; font-size: 1.1rem; font-weight: bold; }
@@ -41,6 +44,11 @@
             <a href="/preparar-batalla.html">Iniciar nueva batalla</a>
         </nav>
         <p>La integridad indica las partes sanas sobre el tamaño total de cada flota.</p>
+        <dl class="estadisticas" aria-label="Estadísticas de campaña" aria-live="polite">
+            <div><dt>Batallas ganadas</dt><dd id="batallasGanadas">—</dd></div>
+            <div><dt>Batallas perdidas</dt><dd id="batallasPerdidas">—</dd></div>
+            <div><dt>Éxito de la campaña</dt><dd id="porcentajeExito">—</dd></div>
+        </dl>
         <div class="tabla-contenedor">
             <table>
                 <caption>Batallas registradas</caption>
@@ -114,6 +122,20 @@
         document.getElementById("actualizarBatallas").addEventListener("click", () => {
             mostrarEstado("Actualizando batallas...");
             dispatcher.submit("/sala/vistaConectada");
+        });
+
+        view.handler("batallasGanadas", (cantidad) => {
+            document.getElementById("batallasGanadas").textContent = cantidad;
+        });
+        view.handler("batallasPerdidas", (cantidad) => {
+            document.getElementById("batallasPerdidas").textContent = cantidad;
+        });
+        const formatoExito = new Intl.NumberFormat("es-UY", {
+            style: "percent",
+            maximumFractionDigits: 2
+        });
+        view.handler("porcentajeExito", (porcentaje) => {
+            document.getElementById("porcentajeExito").textContent = formatoExito.format(porcentaje / 100);
         });
 
         dispatcher.startView(view);

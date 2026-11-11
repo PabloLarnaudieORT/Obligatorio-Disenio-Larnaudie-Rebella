@@ -113,4 +113,15 @@ public class SistemaBatallas {
         return (100.0 * ganados / batallasTotal);
     }
 
+    public void validarFlotaParaLibrarBatalla(String lugarBatalla) throws BatallaException{
+        Batalla batalla = buscarBatalla(lugarBatalla);
+        if(batalla == null){
+            throw new BatallaException("La batalla ingresada no existe");
+        }
+        Oceano oceano = batalla.getJugadorHumano().getOceano();
+        if(!oceano.estanTodosUbicados()){
+            throw new BatallaException("Debe posicionar todos sus barcos primero");
+        }
+    }
+
 }

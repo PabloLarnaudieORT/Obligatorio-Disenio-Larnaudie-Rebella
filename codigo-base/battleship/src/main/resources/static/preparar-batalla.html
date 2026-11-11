@@ -197,6 +197,7 @@
             <p id="estadoFlota" role="status" aria-live="polite"></p>
             <p id="resultadoUbicacion" role="status" aria-live="polite"></p>
             <div id="tableroPreparacion"></div>
+            <button id="librarBatalla" type="button">Librar batalla</button>
             <a class="volver-sala" href="/">Volver a la sala de operaciones</a>
         </section>
         <noscript><p>Activá JavaScript para cargar los tipos de barco.</p></noscript>
@@ -213,6 +214,7 @@
         const resultado = document.getElementById("resultadoValidacion");
         let enviandoValidacion = false;
         let ubicacionesEnCurso = 0;
+        let validacionesDeCombateEnCurso = 0;
         let aperturasEnCurso = 0;
         let lugarDePreparacion = "";
         let indiceSeleccionado = null;
@@ -253,7 +255,9 @@
         const view = dispatcher.registerView("preparar-batalla", {
             urlInicio: "/preparacion-batalla/vistaConectada",
             onError: () => {
-                if (ubicacionesEnCurso > 0) {
+                if (validacionesDeCombateEnCurso > 0) {
+                    mostrarUbicacion("No se pudo validar la flota para librar batalla.", true);
+                } else if (ubicacionesEnCurso > 0) {
                     mostrarUbicacion("No se pudo ubicar el barco. Revisá la selección y la posición elegida.", true);
                 } else if (aperturasEnCurso > 0) {
                     mostrarApertura("No se pudo abrir la preparación. Comprobá el lugar de la batalla.", true);
@@ -264,7 +268,7 @@
                 }
             },
             onException: (mensaje) => {
-                if (ubicacionesEnCurso > 0) mostrarUbicacion(mensaje, true);
+                if (validacionesDeCombateEnCurso > 0 || ubicacionesEnCurso > 0) mostrarUbicacion(mensaje, true);
                 else if (aperturasEnCurso > 0) mostrarApertura(mensaje, true);
                 else mostrarResultado(mensaje, true);
             }
@@ -315,6 +319,19 @@
             mostrarApertura("Preparación abierta: " + lugar + ".");
         });
         view.handler("barcoUbicado", (mensaje) => mostrarUbicacion(mensaje));
+        view.handler("flotaListaParaCombatir", (mensaje) => mostrarUbicacion(mensaje));
+
+        document.getElementById("librarBatalla").addEventListener("click", async () => {
+            mostrarUbicacion("Validando la flota...");
+            validacionesDeCombateEnCurso++;
+            try {
+                await dispatcher.submit("/preparacion-batalla/validarFlotaParaLibrarBatalla", {
+                    lugarBatalla: lugarDePreparacion
+                });
+            } finally {
+                validacionesDeCombateEnCurso--;
+            }
+        });
 
         // El modelo decide si la flota está ubicada; la vista solo muestra su respuesta.
         view.handler("flotaUbicada", (completa) => {

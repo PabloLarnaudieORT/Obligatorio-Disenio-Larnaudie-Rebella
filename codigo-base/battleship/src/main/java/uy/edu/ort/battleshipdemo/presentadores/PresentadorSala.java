@@ -48,6 +48,7 @@ public class PresentadorSala {
         int ganadas = fachada.contarBatallasPorEstado(Batalla.Estados.ganada);
         int perdidas = fachada.contarBatallasPorEstado(Batalla.Estados.perdida);
         double porcentajeExito = fachada.calcularPorcentajeExito();
+        //con esto mandamos a la vista las batallas ganas, perdidas y el porcentaje
         return Commands.create(
                 batallas(),
                 new Command("batallasGanadas", ganadas),
