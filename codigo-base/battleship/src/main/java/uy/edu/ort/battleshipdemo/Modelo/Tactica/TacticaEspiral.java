@@ -1,21 +1,70 @@
 package uy.edu.ort.battleshipdemo.Modelo.Tactica;
 
-import uy.edu.ort.battleshipdemo.Modelo.Disparo;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TacticaEspiral extends Tactica {
+
+     private List<int[]> objetivos = new ArrayList<>();
+     private int proximoObjetivo = 0;
+
+
     public TacticaEspiral() {
         super("Espiral");
     }
 
     @Override
     public int[] seleccionarObjetivo(int filas, int columnas) {
-        // TODO: implementar la selección de objetivo de Espiral.
-        throw new UnsupportedOperationException("Pendiente: seleccionar objetivo.");
+        if (objetivos.isEmpty()) {
+            generarEspiral(filas, columnas);
+        }
+
+        int[] objetivo = objetivos.get(proximoObjetivo);
+        proximoObjetivo++;
+
+        return objetivo;
     }
 
-    @Override
-    public void registraResultado(Disparo disparo) {
-        // TODO: decidir qué información necesita conservar Espiral de este disparo.
-        throw new UnsupportedOperationException("Pendiente: registrar resultado.");
+    private void generarEspiral(int filas, int columnas) {
+        int fila = (filas - 1) / 2;
+        int columna = (columnas - 1) / 2;
+
+        agregarObjetivo(fila, columna, filas, columnas);
+
+        int pasos = 1;
+
+        while (objetivos.size() < filas * columnas) {
+            for (int i = 0; i < pasos; i++) {
+                columna++;
+                agregarObjetivo(fila, columna, filas, columnas);
+            }
+
+            for (int i = 0; i < pasos; i++) {
+                fila++;
+                agregarObjetivo(fila, columna, filas, columnas);
+            }
+
+            pasos++;
+
+            for (int i = 0; i < pasos; i++) {
+                columna--;
+                agregarObjetivo(fila, columna, filas, columnas);
+            }
+
+            for (int i = 0; i < pasos; i++) {
+                fila--;
+                agregarObjetivo(fila, columna, filas, columnas);
+            }
+
+            pasos++;
+        }
+    }
+
+    private void agregarObjetivo(
+            int fila, int columna, int filas, int columnas) {
+        if (fila >= 0 && fila < filas
+                && columna >= 0 && columna < columnas) {
+            objetivos.add(new int[] { fila, columna });
+        }
     }
 }

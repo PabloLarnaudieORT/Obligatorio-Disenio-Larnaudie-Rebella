@@ -19,9 +19,7 @@ import java.util.ArrayList;
 
 /**
  * 
- * Datos de prueba generados con ayuda de IA para comprobar las validaciones.
- * 
- * No carga batallas en el sistema ni modifica la clase de arranque.
+ * Datos de prueba para la aplicación y comprobaciones de configuración.
  * 
  */
 
@@ -69,6 +67,98 @@ public class DatosPrueba {
                 batalla.setJugadorMaquina(maquina);
                 // El constructor de Batalla ya establece EstadoEnPreparacion.
                 fachada.agregarBatalla(batalla);
+        }
+
+        // Precarga los ejemplos que pide el CU03: uno en combate, uno ganado y uno perdido.
+        // Invocar después de cargar los tipos de barco.
+        public static void cargarBatallasCU03() throws BatallaException {
+                Fachada fachada = Fachada.getInstancia();
+
+                if (fachada.buscarBatalla("CU03_COMBATE") == null) {
+                        Batalla combate = crearBatallaCU03(fachada, "CU03_COMBATE", false);
+                        fachada.agregarBatalla(combate);
+                        fachada.iniciarCombate(combate.getLugar());
+                }
+
+                if (fachada.buscarBatalla("CU03_GANADA") == null) {
+                        Batalla ganada = crearBatallaCU03(fachada, "CU03_GANADA", false);
+                        fachada.agregarBatalla(ganada);
+                        fachada.iniciarCombate(ganada.getLugar());
+                        fachada.jugarRonda(ganada.getLugar(), 0, 0, 1);
+                        fachada.jugarRonda(ganada.getLugar(), 0, 1, 2);
+                        fachada.jugarRonda(ganada.getLugar(), 2, 0, 3);
+                }
+
+                if (fachada.buscarBatalla("CU03_PERDIDA") == null) {
+                        Batalla perdida = crearBatallaCU03(fachada, "CU03_PERDIDA", true);
+                        fachada.agregarBatalla(perdida);
+                        fachada.iniciarCombate(perdida.getLugar());
+
+                        int numeroRonda = 1;
+                        for (int columna = 0; columna < 6; columna++) {
+                                fachada.jugarRonda(perdida.getLugar(), 7, columna, numeroRonda);
+                                numeroRonda++;
+                        }
+                        for (int columna = 0; columna < 6; columna++) {
+                                fachada.jugarRonda(perdida.getLugar(), 6, columna, numeroRonda);
+                                numeroRonda++;
+                        }
+                        for (int columna = 0; columna < 5; columna++) {
+                                fachada.jugarRonda(perdida.getLugar(), 5, columna, numeroRonda);
+                                numeroRonda++;
+                        }
+                }
+        }
+
+        private static Batalla crearBatallaCU03(
+                        Fachada fachada, String lugar, boolean jugadorHumanoPierde)
+                        throws BatallaException {
+                TipoBarco submarino = fachada.buscarTipoBarco("Submarino");
+                TipoBarco destructor = fachada.buscarTipoBarco("Destructor");
+                if (submarino == null || destructor == null) {
+                        throw new BatallaException("Primero hay que cargar los tipos de barco.");
+                }
+
+                List<DetalleFlota> detalles = new ArrayList<>();
+                detalles.add(new DetalleFlota(submarino, 1));
+                detalles.add(new DetalleFlota(destructor, 1));
+                ConfiguracionBatalla configuracion = crearConfiguracion(8, 8, detalles);
+
+                JugadorHumano humano = new JugadorHumano("Jugador humano");
+                Oceano oceanoHumano = configuracion.crearOceano();
+                humano.setOceano(oceanoHumano);
+
+                JugadorMaquina maquina = new JugadorMaquina(
+                                "Máquina", new TacticaSecuencial());
+                Oceano oceanoMaquina = configuracion.crearOceano();
+                maquina.setOceano(oceanoMaquina);
+
+                if (jugadorHumanoPierde) {
+                        oceanoHumano.ubicarBarco(
+                                        oceanoHumano.getFlota().getBarcos().get(0), 0, 0, true);
+                        oceanoHumano.ubicarBarco(
+                                        oceanoHumano.getFlota().getBarcos().get(1), 2, 0, true);
+                        oceanoMaquina.ubicarBarco(
+                                        oceanoMaquina.getFlota().getBarcos().get(0), 6, 7, false);
+                        oceanoMaquina.ubicarBarco(
+                                        oceanoMaquina.getFlota().getBarcos().get(1), 4, 7, true);
+                } else {
+                        oceanoHumano.ubicarBarco(
+                                        oceanoHumano.getFlota().getBarcos().get(0), 7, 0, true);
+                        oceanoHumano.ubicarBarco(
+                                        oceanoHumano.getFlota().getBarcos().get(1), 4, 7, true);
+                        oceanoMaquina.ubicarBarco(
+                                        oceanoMaquina.getFlota().getBarcos().get(0), 0, 0, true);
+                        oceanoMaquina.ubicarBarco(
+                                        oceanoMaquina.getFlota().getBarcos().get(1), 2, 0, true);
+                }
+
+                Batalla batalla = new Batalla();
+                batalla.setLugar(lugar);
+                batalla.setConfiguracion(configuracion);
+                batalla.setJugadorHumano(humano);
+                batalla.setJugadorMaquina(maquina);
+                return batalla;
         }
 
         public static void probarConfiguracion() throws TipoBarcoException {

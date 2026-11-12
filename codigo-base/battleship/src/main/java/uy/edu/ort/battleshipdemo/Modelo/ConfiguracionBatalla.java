@@ -39,6 +39,28 @@ public class ConfiguracionBatalla {
         this.flotas = flotas;
     }
 
+    public boolean flotaCompleta(Flota flotaActual) {
+        if (flotas == null || flotaActual == null) {
+            return false;
+        }
+
+        int cantidadEsperadaTotal = 0;
+        for (DetalleFlota detalle : flotas) {
+            if (detalle == null || detalle.getTipo() == null
+                    || detalle.getTipo().getNombre() == null) {
+                return false;
+            }
+
+            cantidadEsperadaTotal += detalle.getCantidad();
+            if (!flotaActual.tieneCantidadBarcosUbicados(
+                    detalle.getTipo(), detalle.getCantidad())) {
+                return false;
+            }
+        }
+
+        return flotaActual.getBarcos().size() == cantidadEsperadaTotal;
+    }
+
     public void validar() throws BatallaException {
         // filas y columnas entre 6 y 12, inclusive.
         if (filas < 6 || filas > 12) {

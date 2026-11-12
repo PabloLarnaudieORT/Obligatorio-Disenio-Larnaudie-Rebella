@@ -136,35 +136,30 @@ public class Oceano {
     }
     
     public Disparo recibirDisparo(int fila, int columna) throws BatallaException {
-        // Nati, aca si una coordenada fila o columna esta fuera del rango, ya hay un
-        // error.
-        if (fila < 0 || fila >= filas || columna < 0 || columna >= columnas) {
-            throw new BatallaException("La posición está fuera del tablero.");
+        if (celdas == null || fila < 0 || fila >= filas
+                || columna < 0 || columna >= columnas) {
+            throw new BatallaException("La coordenada del disparo no es válida");
         }
-        // guardo las celdas en una variable
+
         Celda celda = celdas[fila][columna];
-        // consulto si fue disparada.
         if (celda.isDisparada()) {
-            throw new BatallaException("Ya se ha disparado a esta celda.");
+            throw new BatallaException("Esa celda ya recibió un disparo");
         }
-        Barco barco = this.getFlota().buscarBarco(celda);
-        if (barco != null) {
-            // si hay un barco voy a disparar
-            celda.setDisparada(true);
-            boolean seHundio = barco.estaHundido();
-            if (seHundio) {
-                Resultado resultado1 = new Resultado("Barco hundido");
-                return new Disparo(celda, resultado1);
-            } else {
-                Resultado resultado1 = new Resultado("Impacto");
-                return new Disparo(celda, resultado1);
-            }
+
+        celda.setDisparada(true);
+
+        Barco barco = flota.barcoEn(celda);
+        String textoResultado;
+        if (barco == null) {
+            textoResultado = "agua";
+        } else if (barco.estaHundido()) {
+            textoResultado = "barco hundido";
         } else {
-            // si no hay barco, voy a disparar igual PERO el disparo no tiene barco
-            celda.setDisparada(true);
-            Resultado resultado2 = new Resultado("Agua");
-            return new Disparo(celda, resultado2);
+            textoResultado = "impacto";
         }
+
+        Resultado resultado = new Resultado(textoResultado);
+        return new Disparo(celda, resultado);
     }
 
     //flota le tiene que mandar a ocenao las partes sanas.
