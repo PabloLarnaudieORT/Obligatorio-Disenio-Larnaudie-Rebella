@@ -1,5 +1,7 @@
 package uy.edu.ort.battleshipdemo.Modelo;
 
+import uy.edu.ort.battleshipdemo.Modelo.Eventos.EventoBatalla;
+import uy.edu.ort.battleshipdemo.Modelo.Eventos.ObservadorBatalla;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 import uy.edu.ort.battleshipdemo.Modelo.EstadosBatalla.EstadoBatalla;
 import uy.edu.ort.battleshipdemo.Modelo.EstadosBatalla.EstadoEnPreparacion;
@@ -69,24 +71,51 @@ public class Batalla {
     public void setJugadorMaquina(JugadorMaquina jugadorMaquina) { this.jugadorMaquina = jugadorMaquina; }
     public List<Ronda> getRondas() { return rondas; }
 
+//metodo que devuelve una lista de enteros con los tamanios de los barcos hundidos del enemigo en orden en que son hundidos.
+public List<Integer> getBajasEnemigas() {
+    List<Integer> bajas = new ArrayList<>();
+
+    for (Ronda ronda : rondas) {
+        Disparo disparo = ronda.getDisparoHumano();
+
+        if ("barco hundido".equals(disparo.getResultado().getResultado())) {
+            Barco barco = jugadorMaquina.getOceano().getFlota()
+                    .barcoEn(disparo.getCelda());
+
+            bajas.add(barco.getTipo().getTamanio());
+        }
+    }
+
+    return bajas;
+}
+
+
+
+//observador de batalla, para notificar a la vista cuando hay un cambio en el estado de la batalla o cuando se completa una ronda.
 public void agregarObservador(ObservadorBatalla observador) {
+    
     if (!observadores.contains(observador)) {
         observadores.add(observador);
     }
 }
 
+
 public void quitarObservador(ObservadorBatalla observador) {
     observadores.remove(observador);
 }
 
-private void notificarObservadores() {
+//notifica a los observadores de la batalla cuando hay un cambio en el estado de la batalla o cuando se completa una ronda.
+private void notificarObservadores(String tipoCambio) {
+    EventoBatalla evento = new EventoBatalla(lugar, tipoCambio);
+
     for (ObservadorBatalla observador : observadores) {
-        observador.actualizar(this);
+        observador.actualizar(evento);
     }
 }
 
 
 
+//metodo que inicia el combate, validando que los jugadores tengan sus flotas completas y que la batalla esté en estado de preparación.
 public void iniciarCombate() throws BatallaException {
     
     // aqui se busca cambiar a estado EnCombate, validando que se pueda hacer. 
@@ -106,12 +135,13 @@ public void iniciarCombate() throws BatallaException {
     }
 
     estado = nuevoEstado;
-    notificarObservadores();
+    notificarObservadores("ESTADO_CAMBIADO");
 }
 
 
 
-   public Ronda jugarRonda(
+//metodo que permite jugar una ronda de la batalla, validando que la batalla esté en estado de combate y que el número de ronda esperado sea correcto. Devuelve un objeto Ronda con los resultados del disparo del jugador humano y del disparo de la máquina.
+   public synchronized Ronda jugarRonda(
         int fila, int columna, int numeroRondaEsperada)
         throws BatallaException {
 
@@ -149,7 +179,7 @@ public void iniciarCombate() throws BatallaException {
             numeroRondaEsperada, disparoHumano, disparoMaquina);
 
     rondas.add(ronda);
-    notificarObservadores();
+    notificarObservadores("RONDA_COMPLETADA");   
     return ronda;
 }
 }

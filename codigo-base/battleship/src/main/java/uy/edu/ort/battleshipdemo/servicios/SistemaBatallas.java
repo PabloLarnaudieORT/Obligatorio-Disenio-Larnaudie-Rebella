@@ -1,16 +1,24 @@
 package uy.edu.ort.battleshipdemo.servicios;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import uy.edu.ort.battleshipdemo.Modelo.Batalla;
 import uy.edu.ort.battleshipdemo.Modelo.Oceano;
 import uy.edu.ort.battleshipdemo.Modelo.Flota;
 import uy.edu.ort.battleshipdemo.Modelo.Barco;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
+import uy.edu.ort.battleshipdemo.Modelo.Ronda;
+import uy.edu.ort.battleshipdemo.Modelo.Eventos.ObservadorBatalla;
+import uy.edu.ort.battleshipdemo.Modelo.Eventos.EventoBatalla;
 
-public class SistemaBatallas {
+
+public class SistemaBatallas implements ObservadorBatalla {
+
     private List<Batalla> batallas;
+
+    private List<ObservadorBatalla> observadores = new ArrayList<>();
 
     private static SistemaBatallas instancia;
 
@@ -58,6 +66,7 @@ public class SistemaBatallas {
             throw new BatallaException("No se puede librar más de una batalla en el mismo lugar, cambie de nombre");
         }
         this.batallas.add(batalla);
+        batalla.agregarObservador(this);
     }
 
     public List<Batalla> getBatallas() {
@@ -123,5 +132,68 @@ public class SistemaBatallas {
             throw new BatallaException("Debe posicionar todos sus barcos primero");
         }
     }
+
+
+
+
+
+    public void iniciarCombate(String lugarBatalla) throws BatallaException {
+    Batalla batalla = buscarBatalla(lugarBatalla);
+
+    if (batalla == null) {
+        throw new BatallaException("La batalla indicada no existe");
+    }
+
+    batalla.iniciarCombate();
+}
+
+public Ronda jugarRonda(
+        String lugarBatalla, int fila, int columna, int numeroRondaEsperada)
+        throws BatallaException {
+
+    Batalla batalla = buscarBatalla(lugarBatalla);
+
+    if (batalla == null) {
+        throw new BatallaException("La batalla indicada no existe");
+    }
+
+    return batalla.jugarRonda(fila, columna, numeroRondaEsperada);
+}
+
+public void agregarObservador(
+        String lugarBatalla, ObservadorBatalla observador)
+        throws BatallaException {
+
+    Batalla batalla = buscarBatalla(lugarBatalla);
+
+    if (batalla == null) {
+        throw new BatallaException("La batalla indicada no existe");
+    }
+
+    if (!observadores.contains(observador)) {
+    observadores.add(observador);
+}
+}
+
+public void quitarObservador(
+        String lugarBatalla, ObservadorBatalla observador)
+        throws BatallaException {
+
+    Batalla batalla = buscarBatalla(lugarBatalla);
+
+    if (batalla == null) {
+        throw new BatallaException("La batalla indicada no existe");
+    }
+
+observadores.remove(observador);
+}
+
+
+@Override
+public void actualizar(EventoBatalla evento) {
+    for (ObservadorBatalla observador : observadores) {
+        observador.actualizar(evento);
+    }
+}
 
 }

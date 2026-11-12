@@ -12,7 +12,7 @@ public class TacticaSecuencial extends Tactica {
 
     @Override
     public int[] seleccionarObjetivo(int filas, int columnas) {
-        int fila = (filas - 1) - (proximoObjetivo / columnas);
+        int fila = (proximoObjetivo / columnas);
         int columna = proximoObjetivo % columnas;
 
         proximoObjetivo++;

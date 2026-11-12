@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Librar batalla</title>
+</head>
+<body>
+    <main>
+        <h1 id="tituloBatalla">Batalla</h1>
+        <p>Ronda: <span id="ronda">1</span></p>
+        <p>Estado: <span id="estado"></span></p>
+        <p>Bajas enemigas: <span id="bajasEnemigas">Ninguna</span></p>
+        <p id="mensaje" aria-live="polite"></p>
+
+        <div id="tablero"></div>
+
+        <a href="/">Volver a la sala de operaciones</a>
+    </main>
+
+    <script type="module">
+        import dispatcher from "./CommandDispatcher.js";
+        import BattleShipBoard from "./BattleShipBoard.js";
+
+        const parametros = new URLSearchParams(window.location.search);
+        const lugarBatalla = parametros.get("lugarBatalla");
+        const mensaje = document.getElementById("mensaje");
+
+        const view = dispatcher.registerView("librar-batalla", {
+            urlInicio: "/librar-batalla/vistaConectada",
+            dataInicio: { lugarBatalla },
+            onError: () => {
+                mensaje.textContent = "No se pudo cargar la batalla.";
+            },
+            onException: (texto) => {
+                mensaje.textContent = texto;
+            }
+        });
+
+        new BattleShipBoard(
+            document.getElementById("tablero"),
+            dispatcher,
+            { anchoMaximo: 1000, altoMaximo: 650, tamanoFuente: 12, tamanoIcono: 22 }
+        );
+
+        view.handler("batalla", (datos) => {
+            document.getElementById("tituloBatalla").textContent = datos.lugar;
+            document.getElementById("ronda").textContent = datos.ronda;
+            document.getElementById("estado").textContent = datos.estado;
+        });
+
+        view.handler("mostrarMensaje", (texto) => {
+            mensaje.textContent = texto;
+        });
+
+        view.handler("bajasEnemigas", (texto) => {
+            document.getElementById("bajasEnemigas").textContent = texto;
+        });
+
+let vistaIniciada = false;
+
+const eventos = new EventSource(
+    "/librar-batalla/eventos?lugarBatalla="
+        + encodeURIComponent(lugarBatalla)
+);
+
+eventos.addEventListener("actualizacion", () => {
+    dispatcher.submit(
+        "/librar-batalla/vistaConectada",
+        { lugarBatalla }
+    );
+});
+
+eventos.addEventListener("open", () => {
+    if (!vistaIniciada) {
+        dispatcher.startView(view);
+        vistaIniciada = true;
+    } else {
+        dispatcher.submit(
+            "/librar-batalla/vistaConectada",
+            { lugarBatalla }
+        );
+    }
+});
+
+window.addEventListener("pagehide", () => eventos.close());        
+    </script>
+</body>
+</html>

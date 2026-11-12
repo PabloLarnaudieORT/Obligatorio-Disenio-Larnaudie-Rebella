@@ -107,7 +107,10 @@
                 const celdaAcceso = document.createElement("td");
                 const enlace = document.createElement("a");
                 const parametros = new URLSearchParams({ lugarBatalla: batalla.lugar });
-                enlace.href = "/preparar-batalla.html?" + parametros.toString();
+                const pagina = batalla.estado === "En preparación"
+                    ? "/preparar-batalla.html"
+                    : "/librar-batalla.html";
+                enlace.href = pagina + "?" + parametros.toString();
                 enlace.textContent = "Entrar";
                 enlace.setAttribute("aria-label", "Entrar en la batalla de " + batalla.lugar);
                 celdaAcceso.appendChild(enlace);
@@ -139,6 +142,22 @@
         });
 
         dispatcher.startView(view);
+
+        let conexionSalaAbierta = false;
+        const eventosSala = new EventSource("/sala/eventos");
+
+        eventosSala.addEventListener("actualizacion", () => {
+            dispatcher.submit("/sala/vistaConectada");
+        });
+
+        eventosSala.addEventListener("open", () => {
+            if (conexionSalaAbierta) {
+                dispatcher.submit("/sala/vistaConectada");
+            }
+            conexionSalaAbierta = true;
+        });
+
+        window.addEventListener("pagehide", () => eventosSala.close());
     </script>
 </body>
 </html>

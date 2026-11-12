@@ -13,6 +13,7 @@ public class BattleShipApplication {
 			throws TipoBarcoException, BatallaException {
 		DatosPrueba.cargarTiposBarco();
 		DatosPrueba.cargarBatallaPreparacion();
+		DatosPrueba.cargarBatallasCU03();
 		SpringApplication.run(BattleShipApplication.class, args);
 	}
 
