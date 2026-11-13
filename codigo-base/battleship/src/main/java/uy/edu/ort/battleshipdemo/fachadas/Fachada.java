@@ -98,4 +98,12 @@ public void quitarObservador(
 
     sistemaBatallas.quitarObservador(lugarBatalla, observador);
 }
+
+public void agregarObservadorSala(ObservadorBatalla observador) {
+    sistemaBatallas.agregarObservadorSala(observador);
+}
+
+public void quitarObservadorSala(ObservadorBatalla observador) {
+    sistemaBatallas.quitarObservadorSala(observador);
+}
 }

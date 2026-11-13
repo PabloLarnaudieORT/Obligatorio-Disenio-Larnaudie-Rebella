@@ -25,6 +25,7 @@
         const parametros = new URLSearchParams(window.location.search);
         const lugarBatalla = parametros.get("lugarBatalla");
         const mensaje = document.getElementById("mensaje");
+        let numeroRondaEsperada = 1;
 
         const view = dispatcher.registerView("librar-batalla", {
             urlInicio: "/librar-batalla/vistaConectada",
@@ -37,9 +38,18 @@
             }
         });
 
+        const dispatcherTablero = {
+            mapFunctions: (...argumentos) => dispatcher.mapFunctions(...argumentos),
+            submit: (url, coordenadas) => dispatcher.submit(url, {
+                ...coordenadas,
+                lugarBatalla,
+                numeroRondaEsperada
+            })
+        };
+
         new BattleShipBoard(
             document.getElementById("tablero"),
-            dispatcher,
+            dispatcherTablero,
             { anchoMaximo: 1000, altoMaximo: 650, tamanoFuente: 12, tamanoIcono: 22 }
         );
 
@@ -47,6 +57,7 @@
             document.getElementById("tituloBatalla").textContent = datos.lugar;
             document.getElementById("ronda").textContent = datos.ronda;
             document.getElementById("estado").textContent = datos.estado;
+            numeroRondaEsperada = datos.ronda;
         });
 
         view.handler("mostrarMensaje", (texto) => {
@@ -57,7 +68,10 @@
             document.getElementById("bajasEnemigas").textContent = texto;
         });
 
-let vistaIniciada = false;
+let primeraConexion = true;
+
+// Cargar la batalla aunque el canal SSE tarde en conectarse.
+dispatcher.startView(view);
 
 const eventos = new EventSource(
     "/librar-batalla/eventos?lugarBatalla="
@@ -72,15 +86,16 @@ eventos.addEventListener("actualizacion", () => {
 });
 
 eventos.addEventListener("open", () => {
-    if (!vistaIniciada) {
-        dispatcher.startView(view);
-        vistaIniciada = true;
-    } else {
-        dispatcher.submit(
-            "/librar-batalla/vistaConectada",
-            { lugarBatalla }
-        );
+    if (primeraConexion) {
+        primeraConexion = false;
+        return;
     }
+
+    // Al reconectar, pedir el estado actual por si hubo cambios durante el corte.
+    dispatcher.submit(
+        "/librar-batalla/vistaConectada",
+        { lugarBatalla }
+    );
 });
 
 window.addEventListener("pagehide", () => eventos.close());        

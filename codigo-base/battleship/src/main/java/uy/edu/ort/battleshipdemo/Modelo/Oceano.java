@@ -135,7 +135,7 @@ public class Oceano {
         }
     }
     
-    public Disparo recibirDisparo(int fila, int columna) throws BatallaException {
+    public void validarDisparo(int fila, int columna) throws BatallaException {
         if (celdas == null || fila < 0 || fila >= filas
                 || columna < 0 || columna >= columnas) {
             throw new BatallaException("La coordenada del disparo no es válida");
@@ -145,7 +145,12 @@ public class Oceano {
         if (celda.isDisparada()) {
             throw new BatallaException("Esa celda ya recibió un disparo");
         }
+    }
 
+    public Disparo recibirDisparo(int fila, int columna) throws BatallaException {
+        validarDisparo(fila, columna);
+
+        Celda celda = celdas[fila][columna];
         celda.setDisparada(true);
 
         Barco barco = flota.barcoEn(celda);

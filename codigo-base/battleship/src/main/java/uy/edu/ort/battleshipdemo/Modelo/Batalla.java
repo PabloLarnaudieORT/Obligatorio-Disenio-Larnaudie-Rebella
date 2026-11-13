@@ -153,32 +153,40 @@ public void iniciarCombate() throws BatallaException {
         throw new BatallaException("El número de ronda no es válido");
     }
 
-    Disparo disparoHumano =
-            jugadorMaquina.getOceano().recibirDisparo(fila, columna);
+    Oceano oceanoEnemigo = jugadorMaquina.getOceano();
+    Oceano oceanoPropio = jugadorHumano.getOceano();
+
+    // Validar los dos disparos antes de marcar la celda del jugador.
+    oceanoEnemigo.validarDisparo(fila, columna);
+    int[] objetivoMaquina = jugadorMaquina.getTactica().seleccionarObjetivo(
+            oceanoPropio.getFilas(), oceanoPropio.getColumnas());
+    oceanoPropio.validarDisparo(objetivoMaquina[0], objetivoMaquina[1]);
+
+    Disparo disparoHumano = oceanoEnemigo.recibirDisparo(fila, columna);
 
     Disparo disparoMaquina = null;
+    boolean ganoJugadorHumano = oceanoEnemigo.getFlota().estaHundida();
+    boolean ganoMaquina = false;
 
-    if (jugadorMaquina.getOceano().getFlota().estaHundida()) {
-        ganada();
-    } else {
-        int[] objetivo = jugadorMaquina.getTactica().seleccionarObjetivo(
-                jugadorHumano.getOceano().getFilas(),
-                jugadorHumano.getOceano().getColumnas());
-
-        disparoMaquina = jugadorHumano.getOceano().recibirDisparo(
-                objetivo[0], objetivo[1]);
+    if (!ganoJugadorHumano) {
+        disparoMaquina = oceanoPropio.recibirDisparo(
+                objetivoMaquina[0], objetivoMaquina[1]);
 
         jugadorMaquina.getTactica().registraResultado(disparoMaquina);
-
-        if (jugadorHumano.getOceano().getFlota().estaHundida()) {
-            perdida();
-        }
+        ganoMaquina = oceanoPropio.getFlota().estaHundida();
     }
 
     Ronda ronda = new Ronda(
             numeroRondaEsperada, disparoHumano, disparoMaquina);
 
     rondas.add(ronda);
+
+    if (ganoJugadorHumano) {
+        ganada();
+    } else if (ganoMaquina) {
+        perdida();
+    }
+
     notificarObservadores("RONDA_COMPLETADA");   
     return ronda;
 }

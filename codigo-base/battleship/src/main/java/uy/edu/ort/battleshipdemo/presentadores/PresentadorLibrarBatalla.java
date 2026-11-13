@@ -31,21 +31,47 @@ import uy.edu.ort.battleshipdemo.Modelo.Eventos.ObservadorBatalla;
 @RequestMapping("/librar-batalla")
 @Scope("session")
 
-public class PresentadorLibrarBatalla implements ObservadorBatalla {
+public class PresentadorLibrarBatalla {
 
     private Fachada fachada = Fachada.getInstancia();
-    private String lugarBatallaActual;
-    private int numeroRondaEsperada;
-    private SseEmitter emisor;
 
 @GetMapping(value = "/eventos", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 public SseEmitter eventos(String lugarBatalla) throws BatallaException {
-    lugarBatallaActual = lugarBatalla;
-    emisor = new SseEmitter();
+    SseEmitter emisor = new SseEmitter();
 
-    fachada.agregarObservador(lugarBatalla, this);
+    ObservadorBatalla observador = new ObservadorBatalla() {
+        @Override
+        public void actualizar(EventoBatalla evento) {
+            if (evento.getIdentificadorBatalla().equals(lugarBatalla)) {
+                try {
+                    emisor.send(
+                            SseEmitter.event()
+                                    .name("actualizacion")
+                                    .data(evento.getTipoCambio()));
+                } catch (IOException error) {
+                    emisor.completeWithError(error);
+                }
+            }
+        }
+    };
+
+    fachada.agregarObservador(lugarBatalla, observador);
+    emisor.onCompletion(() -> quitarObservador(lugarBatalla, observador));
+    emisor.onTimeout(() -> {
+        quitarObservador(lugarBatalla, observador);
+        emisor.complete();
+    });
+    emisor.onError(error -> quitarObservador(lugarBatalla, observador));
 
     return emisor;
+}
+
+private void quitarObservador(String lugarBatalla, ObservadorBatalla observador) {
+    try {
+        fachada.quitarObservador(lugarBatalla, observador);
+    } catch (BatallaException error) {
+        // Si la batalla ya no está disponible, esta conexión ya no puede observarla.
+    }
 }
 
 
@@ -57,16 +83,18 @@ public SseEmitter eventos(String lugarBatalla) throws BatallaException {
             throw new BatallaException("La batalla indicada no existe");
         }
 
-        lugarBatallaActual = lugarBatalla;
+        synchronized (batalla) {
+            return crearComandosVista(batalla);
+        }
+    }
 
+    private Commands crearComandosVista(Batalla batalla) {
         int numeroRonda = batalla.getRondas().size() + 1;
 
         if (batalla.getEstado().getEstado() != Batalla.Estados.enCombate
                 && !batalla.getRondas().isEmpty()) {
             numeroRonda = batalla.getRondas().size();
         }
-
-        numeroRondaEsperada = numeroRonda;
 
         BatallaDto datos = new BatallaDto(
                 batalla.getLugar(),
@@ -80,43 +108,29 @@ public SseEmitter eventos(String lugarBatalla) throws BatallaException {
                 "/librar-batalla/aguasPropias",
                 "/librar-batalla/disparar");
 
-       Commands comandos = Commands.create(
-        new Command("batalla", datos),
-        new Command("inicializar", tablero));
+        Commands comandos = Commands.create(
+                new Command("batalla", datos),
+                new Command("inicializar", tablero));
 
-for (Barco barco : batalla.getJugadorHumano().getOceano().getFlota().getBarcos()) {
-    for (Celda celda : barco.getCeldas()) {
-        comandos.add(new Command(
-                "mostrarAguasPropias",
-                new ValorDto(celda.getFila(), celda.getColumna(), "barco")));
-    }
-}
-
-for (Ronda ronda : batalla.getRondas()) {
-    agregarDisparo(comandos, ronda.getDisparoHumano(), false);
-
-    if (ronda.getDisparoMaquina() != null) {
-        agregarDisparo(comandos, ronda.getDisparoMaquina(), true);
-    }
-}
-
-if (batalla.getEstado().getEstado() == Batalla.Estados.perdida) {
-    for (Barco barco : batalla.getJugadorMaquina().getOceano().getFlota().getBarcos()) {
-        for (Celda celda : barco.getCeldas()) {
-            if (!celda.isDisparada()) {
+        for (Barco barco : batalla.getJugadorHumano().getOceano().getFlota().getBarcos()) {
+            for (Celda celda : barco.getCeldas()) {
                 comandos.add(new Command(
-                        "mostrarAguasEnemigas",
+                        "mostrarAguasPropias",
                         new ValorDto(celda.getFila(), celda.getColumna(), "barco")));
             }
         }
-    }
-}
 
-comandos.add(new Command(
-        "bajasEnemigas",
-        formatearBajasEnemigas(batalla)));
+        for (Ronda ronda : batalla.getRondas()) {
+            agregarDisparo(comandos, ronda.getDisparoHumano(), false);
 
-return comandos;
+            if (ronda.getDisparoMaquina() != null) {
+                agregarDisparo(comandos, ronda.getDisparoMaquina(), true);
+            }
+        }
+
+        agregarBarcosEnemigosNoDescubiertos(comandos, batalla);
+        comandos.add(new Command("bajasEnemigas", formatearBajasEnemigas(batalla)));
+        return comandos;
     }
 
 
@@ -142,54 +156,53 @@ private void agregarDisparo(Commands comandos, Disparo disparo, boolean aguasPro
                     valor)));
 }
 
+private void agregarBarcosEnemigosNoDescubiertos(Commands comandos, Batalla batalla) {
+    if (batalla.getEstado().getEstado() != Batalla.Estados.perdida) {
+        return;
+    }
+
+    for (Barco barco : batalla.getJugadorMaquina().getOceano().getFlota().getBarcos()) {
+        for (Celda celda : barco.getCeldas()) {
+            if (!celda.isDisparada()) {
+                comandos.add(new Command(
+                        "mostrarAguasEnemigas",
+                        new ValorDto(celda.getFila(), celda.getColumna(), "barco")));
+            }
+        }
+    }
+}
+
 
 
     @PostMapping("/disparar")
-public Commands disparar(int coordenadaVertical, int coordenadaHorizontal) {
+    public Commands disparar(
+            String lugarBatalla,
+            int numeroRondaEsperada,
+            int coordenadaVertical,
+            int coordenadaHorizontal) {
     try {
         Ronda ronda = fachada.jugarRonda(
-                lugarBatallaActual,
+                lugarBatalla,
                 coordenadaVertical,
                 coordenadaHorizontal,
                 numeroRondaEsperada);
 
-        numeroRondaEsperada = numeroRondaEsperada + 1;
+        Batalla batalla = fachada.buscarBatalla(lugarBatalla);
 
-        Batalla batalla = fachada.buscarBatalla(lugarBatallaActual);
-
-        Disparo disparoHumano = ronda.getDisparoHumano();
-        String resultadoHumano = disparoHumano.getResultado().getResultado();
-
-        if ("barco hundido".equals(resultadoHumano)) {
-            resultadoHumano = "impacto";
-        }
-
-        Commands comandos = Commands.create(
-                new Command(
-                        "mostrarAguasEnemigas",
-                        new ValorDto(
-                                disparoHumano.getCelda().getFila(),
-                                disparoHumano.getCelda().getColumna(),
-                                resultadoHumano)));
+        Commands comandos = Commands.create();
+        agregarDisparo(comandos, ronda.getDisparoHumano(), false);
 
         Disparo disparoMaquina = ronda.getDisparoMaquina();
 
         if (disparoMaquina != null) {
-            String resultadoMaquina = disparoMaquina.getResultado().getResultado();
-
-            if ("barco hundido".equals(resultadoMaquina)) {
-                resultadoMaquina = "impacto";
-            }
-
-            comandos.add(new Command(
-                    "mostrarAguasPropias",
-                    new ValorDto(
-                            disparoMaquina.getCelda().getFila(),
-                            disparoMaquina.getCelda().getColumna(),
-                            resultadoMaquina)));
+            agregarDisparo(comandos, disparoMaquina, true);
         }
 
-        int numeroRonda = numeroRondaEsperada;
+        // Si este disparo terminó la batalla en derrota, mostrar enseguida
+        // las partes de los barcos enemigos que aún no se habían descubierto.
+        agregarBarcosEnemigosNoDescubiertos(comandos, batalla);
+
+        int numeroRonda = numeroRondaEsperada + 1;
 
         if (batalla.getEstado().getEstado() != Batalla.Estados.enCombate) {
             numeroRonda = batalla.getRondas().size();
@@ -243,19 +256,5 @@ public Commands aguasPropias(
                     "No se puede disparar en aguas propias"));
 }
 
-
-@Override
-public void actualizar(EventoBatalla evento) {
-    if (evento.getIdentificadorBatalla().equals(lugarBatallaActual)) {
-        try {
-            emisor.send(
-                    SseEmitter.event()
-                            .name("actualizacion")
-                            .data(evento.getTipoCambio()));
-        } catch (IOException error) {
-            emisor.completeWithError(error);
-        }
-    }
-}
 
 }

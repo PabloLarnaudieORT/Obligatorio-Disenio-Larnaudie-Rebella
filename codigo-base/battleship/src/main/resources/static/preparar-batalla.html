@@ -127,6 +127,10 @@
             <input id="lugarBatalla" name="lugarBatalla" type="text" aria-describedby="ayudaLugar">
             <small id="ayudaLugar">Si lo dejás vacío, se asignará un nombre de seis letras mayúsculas al crear la batalla.</small>
         </div>
+        <div class="campo-lugar">
+            <label for="nombreTactica">Táctica de la máquina</label>
+            <select id="nombreTactica" name="nombreTactica" required></select>
+        </div>
         <div class="dimensiones">
             <label for="filas">Filas (6 a 12)
                 <input id="filas" name="filas" type="number" value="6" min="6" max="12" step="1">
@@ -150,8 +154,8 @@
             </table>
         </div>
         <p id="estadoCatalogo" role="status" aria-live="polite">Cargando tipos de barco...</p>
-        <button type="submit">Validar flota</button>
-        <p>Esta acción comprueba las dimensiones y la composición de la flota. La batalla todavía no se crea.</p>
+        <button type="submit">Continuar</button>
+        <p>Se validará la configuración y se creará la batalla para ubicar las flotas.</p>
         <p id="resultadoValidacion" role="status" aria-live="polite"></p>
         </form>
         <section id="seccionAbrirPreparacion" class="abrir-preparacion" aria-labelledby="tituloAbrirPreparacion">
@@ -320,6 +324,10 @@
         });
         view.handler("barcoUbicado", (mensaje) => mostrarUbicacion(mensaje));
         view.handler("flotaListaParaCombatir", (mensaje) => mostrarUbicacion(mensaje));
+        view.handler("batallaCreada", (lugar) => {
+            document.getElementById("estadoBarcosPreparacion").textContent =
+                "Batalla creada. Lugar: " + lugar + ". Ubicá tus barcos.";
+        });
 
         document.getElementById("librarBatalla").addEventListener("click", async () => {
             mostrarUbicacion("Validando la flota...");
@@ -383,6 +391,21 @@
             mostrarEstado(tipos.length === 0
                 ? "No hay tipos de barco disponibles."
                 : "Indicá la cantidad de barcos de cada tipo. Podés elegir de 0 a 6.");
+        });
+
+        view.handler("tacticas", (tacticas) => {
+            const selector = document.getElementById("nombreTactica");
+            selector.replaceChildren();
+            if (!Array.isArray(tacticas)) {
+                mostrarEstado("No se pudo mostrar el catálogo de tácticas.", true);
+                return;
+            }
+            tacticas.forEach((tactica) => {
+                const opcion = document.createElement("option");
+                opcion.value = tactica.nombre;
+                opcion.textContent = tactica.nombre;
+                selector.appendChild(opcion);
+            });
         });
 
         // Representar los DTOs recibidos sin calcular ubicación ni modificar el modelo.
@@ -452,13 +475,14 @@
             const datos = {
                 lugarBatalla: document.getElementById("lugarBatalla").value,
                 filas: document.getElementById("filas").value,
-                columnas: document.getElementById("columnas").value
+                columnas: document.getElementById("columnas").value,
+                nombreTactica: document.getElementById("nombreTactica").value
             };
             cuerpoTabla.querySelectorAll("input").forEach((entrada, indice) => {
                 datos[`cantidadesBarcos[${indice}].nombreTipo`] = entrada.dataset.tipoBarco;
                 datos[`cantidadesBarcos[${indice}].cantidad`] = entrada.value;
             });
-            mostrarResultado("Validando flota...");
+            mostrarResultado("Creando batalla...");
             enviandoValidacion = true;
             try {
                 await dispatcher.submit("/preparacion-batalla/prepararBatalla", datos);

@@ -67,6 +67,7 @@ public class SistemaBatallas implements ObservadorBatalla {
         }
         this.batallas.add(batalla);
         batalla.agregarObservador(this);
+        actualizar(new EventoBatalla(nombreLugar, "BATALLA_AGREGADA"));
     }
 
     public List<Batalla> getBatallas() {
@@ -97,7 +98,7 @@ public class SistemaBatallas implements ObservadorBatalla {
         // y a su vez, buscamos el barco que tiene la flota por su indice.
         Barco barco = flota.buscarUnBarcoPorSuIndice(indiceBarco);
         oceano.ubicarBarco(barco, fila, columna, horizontal);
-
+        actualizar(new EventoBatalla(lugarBatalla, "BARCO_UBICADO"));
     }
 
     //Esto lo vamos a usar para mostrar estadisticas de la campaña
@@ -175,6 +176,16 @@ public void agregarObservador(
 }
 }
 
+public void agregarObservadorSala(ObservadorBatalla observador) {
+    if (!observadores.contains(observador)) {
+        observadores.add(observador);
+    }
+}
+
+public void quitarObservadorSala(ObservadorBatalla observador) {
+    observadores.remove(observador);
+}
+
 public void quitarObservador(
         String lugarBatalla, ObservadorBatalla observador)
         throws BatallaException {
@@ -191,8 +202,15 @@ observadores.remove(observador);
 
 @Override
 public void actualizar(EventoBatalla evento) {
-    for (ObservadorBatalla observador : observadores) {
-        observador.actualizar(evento);
+    List<ObservadorBatalla> copiaObservadores = new ArrayList<>(observadores);
+
+    for (ObservadorBatalla observador : copiaObservadores) {
+        try {
+            observador.actualizar(evento);
+        } catch (RuntimeException error) {
+            // Una conexión fallida no debe interrumpir el aviso a las demás.
+            observadores.remove(observador);
+        }
     }
 }
 

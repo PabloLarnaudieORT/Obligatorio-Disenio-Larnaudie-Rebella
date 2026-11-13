@@ -11,8 +11,10 @@ import uy.edu.ort.battleshipdemo.ValorDto;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 
 import uy.edu.ort.battleshipdemo.DTOs.TipoBarcoDto;
+import uy.edu.ort.battleshipdemo.DTOs.TacticaDto;
 import uy.edu.ort.battleshipdemo.DTOs.PrepararBatallaDto;
 import uy.edu.ort.battleshipdemo.DTOs.CantidadBarcoDto;
 import uy.edu.ort.battleshipdemo.DTOs.BarcoPreparacionDto;
@@ -26,6 +28,12 @@ import uy.edu.ort.battleshipdemo.Modelo.Oceano;
 import uy.edu.ort.battleshipdemo.Modelo.Batalla;
 import uy.edu.ort.battleshipdemo.Modelo.Celda;
 import uy.edu.ort.battleshipdemo.Modelo.Barco;
+import uy.edu.ort.battleshipdemo.Modelo.Jugador.JugadorHumano;
+import uy.edu.ort.battleshipdemo.Modelo.Jugador.JugadorMaquina;
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.Tactica;
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.TacticaSecuencial;
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.TacticaEspiral;
+import uy.edu.ort.battleshipdemo.Modelo.Tactica.TacticaCazaYAtaque;
 import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 
 @RestController
@@ -33,10 +41,11 @@ import uy.edu.ort.battleshipdemo.excepciones.BatallaException;
 @Scope("session")
 public class PresentadorPrepararBatalla {
     private Fachada fachada = Fachada.getInstancia();
+    private Random azar = new Random();
 
     @PostMapping("/vistaConectada")
     public Commands vistaConectada() {
-        return Commands.create(tiposBarco());
+        return Commands.create(tiposBarco(), tacticas());
     }
 
     // fachada-getTiposBarco() obtiene los tipos del catalogo.
@@ -47,6 +56,65 @@ public class PresentadorPrepararBatalla {
         return new Command(
                 "tiposBarco",
                 TipoBarcoDto.listaDtos(fachada.getTiposBarco()));
+    }
+
+    private Command tacticas() {
+        List<Tactica> disponibles = new ArrayList<>();
+        disponibles.add(new TacticaSecuencial());
+        disponibles.add(new TacticaEspiral());
+        disponibles.add(new TacticaCazaYAtaque());
+        return new Command("tacticas", TacticaDto.listaTacticaDto(disponibles));
+    }
+
+    private Tactica crearTactica(String nombre) throws BatallaException {
+        if ("Secuencial".equals(nombre)) {
+            return new TacticaSecuencial();
+        }
+        if ("Espiral".equals(nombre)) {
+            return new TacticaEspiral();
+        }
+        if ("Caza y ataque".equals(nombre)) {
+            return new TacticaCazaYAtaque();
+        }
+        throw new BatallaException("Seleccioná una táctica de juego válida.");
+    }
+
+    private Oceano crearOceanoMaquina(ConfiguracionBatalla configuracion)
+            throws BatallaException {
+        for (int intento = 0; intento < 100; intento++) {
+            Oceano oceano = configuracion.crearOceano();
+            boolean flotaUbicada = true;
+
+            for (Barco barco : oceano.getFlota().getBarcos()) {
+                if (!ubicarBarcoAleatoriamente(oceano, barco)) {
+                    flotaUbicada = false;
+                    break;
+                }
+            }
+
+            if (flotaUbicada) {
+                return oceano;
+            }
+        }
+        throw new BatallaException("No se pudo ubicar la flota de la máquina. Probá otra configuración.");
+    }
+
+    private boolean ubicarBarcoAleatoriamente(Oceano oceano, Barco barco) {
+        int cantidadIntentos = oceano.getFilas() * oceano.getColumnas() * 2;
+
+        for (int intento = 0; intento < cantidadIntentos; intento++) {
+            int fila = azar.nextInt(oceano.getFilas());
+            int columna = azar.nextInt(oceano.getColumnas());
+            boolean horizontal = azar.nextBoolean();
+
+            try {
+                oceano.ubicarBarco(barco, fila, columna, horizontal);
+                return true;
+            } catch (BatallaException error) {
+                // Esa posición no sirve; se prueba otra posición aleatoria.
+            }
+        }
+        return false;
     }
 
     private ConfiguracionBatalla crearConfiguracion(PrepararBatallaDto datos) throws BatallaException {
@@ -112,7 +180,24 @@ public class PresentadorPrepararBatalla {
     @PostMapping("/prepararBatalla")
     public Commands prepararBatalla(PrepararBatallaDto prepararBatallaDto) throws BatallaException {
         ConfiguracionBatalla configuracionBatalla = crearConfiguracion(prepararBatallaDto);
-        return Commands.create(new Command("configuracionValidada", "La configuracion de la flota es valida"));
+        Tactica tactica = crearTactica(prepararBatallaDto.getNombreTactica());
+
+        JugadorHumano jugadorHumano = new JugadorHumano("Jugador humano");
+        jugadorHumano.setOceano(configuracionBatalla.crearOceano());
+
+        JugadorMaquina jugadorMaquina = new JugadorMaquina("Máquina", tactica);
+        jugadorMaquina.setOceano(crearOceanoMaquina(configuracionBatalla));
+
+        Batalla batalla = new Batalla();
+        batalla.setLugar(prepararBatallaDto.getLugarBatalla());
+        batalla.setConfiguracion(configuracionBatalla);
+        batalla.setJugadorHumano(jugadorHumano);
+        batalla.setJugadorMaquina(jugadorMaquina);
+        fachada.agregarBatalla(batalla);
+
+        Commands comandos = abrirPreparacion(batalla.getLugar());
+        comandos.add(new Command("batallaCreada", batalla.getLugar()));
+        return comandos;
     }
 
     @PostMapping("/ubicarBarco")

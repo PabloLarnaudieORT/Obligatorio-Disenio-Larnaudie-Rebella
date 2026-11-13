@@ -39,19 +39,35 @@ import uy.edu.ort.battleshipdemo.Modelo.Eventos.ObservadorBatalla;
 @RestController
 @RequestMapping("/sala")
 @Scope("session")
-public class PresentadorSala implements ObservadorBatalla {
+public class PresentadorSala {
 
     private Fachada fachada = Fachada.getInstancia();
-    private SseEmitter emisor;
 
     @GetMapping(value = "/eventos", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter eventos() throws BatallaException {
-        emisor = new SseEmitter();
+        SseEmitter emisor = new SseEmitter();
 
-        if (!fachada.getBatallas().isEmpty()) {
-            String lugarBatalla = fachada.getBatallas().get(0).getLugar();
-            fachada.agregarObservador(lugarBatalla, this);
-        }
+        ObservadorBatalla observador = new ObservadorBatalla() {
+            @Override
+            public void actualizar(EventoBatalla evento) {
+                try {
+                    emisor.send(
+                            SseEmitter.event()
+                                    .name("actualizacion")
+                                    .data(evento.getTipoCambio()));
+                } catch (IOException error) {
+                    emisor.completeWithError(error);
+                }
+            }
+        };
+
+        fachada.agregarObservadorSala(observador);
+        emisor.onCompletion(() -> fachada.quitarObservadorSala(observador));
+        emisor.onTimeout(() -> {
+            fachada.quitarObservadorSala(observador);
+            emisor.complete();
+        });
+        emisor.onError(error -> fachada.quitarObservadorSala(observador));
 
         return emisor;
     }
@@ -75,15 +91,4 @@ public class PresentadorSala implements ObservadorBatalla {
                 new Command("porcentajeExito", porcentajeExito));
     }
 
-    @Override
-    public void actualizar(EventoBatalla evento) {
-        try {
-            emisor.send(
-                    SseEmitter.event()
-                            .name("actualizacion")
-                            .data(evento.getTipoCambio()));
-        } catch (IOException error) {
-            emisor.completeWithError(error);
-        }
-    }
 }
